@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111113">
+<title>Reserva tu hora</title>
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="temas.js"></script>
+<style>
+:root{--bg:#111113;--card:#1b1b1f;--card2:#24242a;--line:#2f2f36;--txt:#f4f4f5;--mut:#9d9da8;--acc:#e3a33b;--acc2:#f3c06a;--onacc:#1a1408;--ok:#3fb871;--bad:#e5534b}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--txt);font-family:"Plus Jakarta Sans",-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;font-size:16px;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+.wrap{max-width:560px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top)) 18px calc(130px + env(safe-area-inset-bottom))}
+.hero{display:flex;align-items:center;gap:14px;padding:18px;border-radius:22px;background:linear-gradient(135deg,var(--card),var(--card2));border:1px solid var(--line);margin-bottom:8px}
+.avatar{width:58px;height:58px;border-radius:18px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;flex:none;box-shadow:0 8px 24px color-mix(in srgb,var(--acc) 35%,transparent)}
+.hero h1{font-size:21px;line-height:1.2;font-weight:800;letter-spacing:-.01em}
+.hero p{color:var(--mut);font-size:14px;margin-top:3px}
+.hero a{margin-left:auto;flex:none;width:42px;height:42px;border-radius:14px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--txt);background:var(--bg)}
+h2{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;margin:26px 0 12px}
+h2 span{width:26px;height:26px;border-radius:50%;background:var(--card2);border:1px solid var(--line);display:inline-flex;align-items:center;justify-content:center;font-size:13px;color:var(--acc2)}
+h2.ok span{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.serv{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;margin-bottom:9px;cursor:pointer;transition:.15s}
+.serv b{display:block;font-weight:700}
+.serv small{color:var(--mut);font-size:13px}
+.serv .p{margin-left:auto;font-weight:800;color:var(--acc2);font-size:17px}
+[data-claro="1"] .serv .p{color:var(--acc)}
+.on{border-color:var(--acc)!important;background:color-mix(in srgb,var(--acc) 13%,var(--card))!important}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;scrollbar-width:none}
+.chip{flex:none;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:10px 0;cursor:pointer;text-align:center;width:64px}
+.chip small{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+.chip b{font-size:19px;font-weight:800;display:block;margin:1px 0}
+.chip:disabled{opacity:.35;cursor:default}
+.chip.on small{color:var(--acc2)}
+.horas{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.horas button{background:var(--card);border:1.5px solid var(--line);border-radius:12px;padding:12px 0;cursor:pointer;font-variant-numeric:tabular-nums;font-weight:600}
+.nada{color:var(--mut);font-size:14px;padding:14px;background:var(--card);border:1px dashed var(--line);border-radius:14px;text-align:center}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:12px;font-weight:600}
+input{display:block;width:100%;margin-top:6px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px;font-size:16px;font-weight:500}
+input:focus{outline:none;border-color:var(--acc)}
+.bar{position:fixed;left:0;right:0;bottom:0;background:color-mix(in srgb,var(--bg) 94%,transparent);backdrop-filter:blur(12px);border-top:1px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom))}
+.bar .in{max-width:560px;margin:0 auto}
+.res{font-size:13px;color:var(--mut);margin-bottom:9px;min-height:18px}
+.res b{color:var(--txt)}
+.send{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;background:var(--acc);color:var(--onacc);font-weight:800;font-size:16px;border:0;cursor:pointer}
+.send:disabled{background:var(--card2);color:var(--mut);cursor:default}
+.box{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px 22px;text-align:center;margin-top:20px;line-height:1.5}
+.box h1{font-size:23px;margin:14px 0 6px;font-weight:800}
+.box p{color:var(--mut)}
+.det{background:var(--card2);border-radius:16px;padding:14px 16px;margin:18px 0;text-align:left}
+.det div{display:flex;justify-content:space-between;padding:6px 0;font-size:15px}
+.det span{color:var(--mut)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border-radius:14px;border:1.5px solid var(--line);background:var(--bg);color:var(--txt);text-decoration:none;font-weight:700;margin-top:10px;cursor:pointer}
+.skel{height:64px;border-radius:16px;background:linear-gradient(90deg,var(--card),var(--card2),var(--card));background-size:200% 100%;animation:sk 1.2s infinite;margin-bottom:10px}
+@keyframes sk{to{background-position:-200% 0}}
+.nota{font-size:13px;color:var(--mut);margin-top:6px;line-height:1.5}
+.err{color:var(--bad);font-size:14px;margin-bottom:8px}
+.pie{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;opacity:.7}
+</style>
+<link rel="stylesheet" href="premium.css">
+</head>
+<body>
+<div class="wrap" id="app"><div class="skel" style="height:96px"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
+<div class="bar" id="bar" style="display:none"><div class="in"><div class="res" id="res"></div><button class="send" id="send" disabled>Confirmar reserva</button></div></div>
+<script>
+(function(){
+"use strict";
+const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
+const $=s=>document.querySelector(s);
+const pad=n=>String(n).padStart(2,'0');
+const ymd=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
+const toMin=h=>{const[a,b]=(h||'0:0').split(':').map(Number);return a*60+(b||0)};
+const toHH=m=>pad(Math.floor(m/60))+':'+pad(m%60);
+const clp=n=>'$'+Math.round(n||0).toLocaleString('es-CL');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fechaLarga=s=>{const t=parse(s).toLocaleDateString('es-CL',{weekday:'long',day:'numeric',month:'long'});return t.charAt(0).toUpperCase()+t.slice(1)};
+const WA='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11.5a8 8 0 0 1-11.8 7L4 20l1.5-4A8 8 0 1 1 20 11.5z"/><path d="M9 9.5c.3 1.8 1.7 3.6 3.6 4.6l1.1-1 1.8.8"/></svg>';
+const CAL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="3"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
+const OK='<svg width="64" height="64" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(63,184,113,.15)" stroke="#3fb871" stroke-width="2"/><path d="M14 25l7 7 13-15" stroke="#3fb871" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+const codigo=new URLSearchParams(location.search).get('b')||(()=>{const p=decodeURIComponent(location.pathname.split('/').filter(Boolean).pop()||'');return /^(r|r\.html|silla|index\.html)$/i.test(p)?'':p})();
+let P=null,ocupado=[],ahora=null,activo=true;
+let sel={s:null,f:null,h:null};
+let datos=(()=>{try{return JSON.parse(localStorage.getItem('silla_cliente'))||{}}catch(e){return{}}})();
+let enviando=false,hecho=null,error='';
+
+async function api(q){const r=await fetch(API+'?'+new URLSearchParams(q));return r.json()}
+async function cargar(){
+  if(!codigo){pantalla('Enlace incompleto','Pídele a la barbería su enlace de reservas.');return}
+  try{
+    const j=await api({accion:'publico',b:codigo});
+    if(!j.ok){pantalla('No encontramos esta barbería','Revisa el enlace o pídele uno nuevo a tu barbero.');return}
+    P=j.perfil||{};ocupado=j.ocupado||[];ahora=j.ahora;activo=j.activo;
+    if(window.aplicarTema)aplicarTema(P.tema);
+    document.title='Reserva tu hora · '+(P.n||'Barbería');
+    if(!activo){pantalla('Reservas en pausa','Por ahora no se puede reservar en línea.'+(P.w?' Escríbele directo a la barbería.':''),true);return}
+    render();
+  }catch(e){pantalla('Sin conexión','Revisa tu internet e inténtalo de nuevo.')}
+}
+function pantalla(t,p,wa){
+  $('#bar').style.display='none';
+  $('#app').innerHTML=`<div class="box"><h1>${esc(t)}</h1><p>${esc(p)}</p>${wa&&P&&P.w?`<a class="btn" href="https://wa.me/${esc(P.w)}" target="_blank" rel="noopener">${WA}Escribir por WhatsApp</a>`:''}${!wa?'<button class="btn" onclick="location.reload()">Reintentar</button>':''}</div>`;
+}
+function hoyF(){return ahora&&ahora.f?ahora.f:ymd(new Date())}
+function minAhora(){if(ahora&&ahora.m!=null)return ahora.m+Math.floor((Date.now()-cargado)/60000);const d=new Date();return d.getHours()*60+d.getMinutes()}
+const cargado=Date.now();
+function dias(){const out=[],ds=P.d&&P.d.length?P.d:[1,2,3,4,5,6],base=parse(hoyF());for(let i=0;out.length<14&&i<40;i++){const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i);if(ds.indexOf(d.getDay())>=0)out.push(ymd(d))}return out}
+function libres(f,s){
+  const dur=+((P.s||[])[s]||[])[2]||30,st=+P.v||30,a=toMin(P.i||'10:00'),b=toMin(P.f||'20:00'),ant=+P.ant||30,out=[];
+  const lim=f===hoyF()?minAhora()+ant:-1;
+  for(let t=a;t+dur<=b;t+=st){
+    if(t<lim)continue;
+    if(ocupado.some(o=>o[0]===f&&toMin(o[1])<t+dur&&t<toMin(o[1])+(+o[2]||30)))continue;
+    out.push(toHH(t));
+  }
+  return out;
+}
+function render(){
+  if(hecho)return renderHecho();
+  const S=P.s||[];
+  if(sel.s==null&&S.length===1)sel.s=0;
+  let h=`<div class="hero"><div class="avatar">${esc((P.n||'B').trim().charAt(0).toUpperCase())}</div><div><h1>${esc(P.n||'Barbería')}</h1><p>${P.b?'Reserva con '+esc(P.b):'Reserva tu hora en un minuto'}</p></div>${P.w?`<a href="https://wa.me/${esc(P.w)}" target="_blank" rel="noopener" aria-label="WhatsApp">${WA}</a>`:''}</div>`;
+  h+=`<h2 class="${sel.s!=null?'ok':''}"><span>1</span>Elige el servicio</h2>`+S.map((s,i)=>`<button class="serv ${sel.s===i?'on':''}" data-s="${i}"><div><b>${esc(s[0])}</b><small>${+s[2]||30} min</small></div><span class="p">${clp(s[1])}</span></button>`).join('');
+  h+=`<h2 class="${sel.f?'ok':''}"><span>2</span>Elige el día</h2>`;
+  if(sel.s==null)h+=`<p class="nada">Primero elige un servicio.</p>`;
+  else h+=`<div class="chips">`+dias().map(f=>{const d=parse(f),n=libres(f,sel.s).length;return`<button class="chip ${sel.f===f?'on':''}" data-f="${f}" ${n?'':'disabled'}><small>${f===hoyF()?'Hoy':d.toLocaleDateString('es-CL',{weekday:'short'}).replace('.','')}</small><b>${d.getDate()}</b><small>${n?n+' libre'+(n===1?'':'s'):'Lleno'}</small></button>`}).join('')+`</div>`;
+  h+=`<h2 class="${sel.h?'ok':''}"><span>3</span>Elige la hora</h2>`;
+  if(sel.s==null||!sel.f)h+=`<p class="nada">Elige el día para ver las horas libres.</p>`;
+  else{const hs=libres(sel.f,sel.s);if(sel.h&&hs.indexOf(sel.h)<0)sel.h=null;h+=hs.length?`<div class="horas">${hs.map(x=>`<button class="${sel.h===x?'on':''}" data-h="${x}">${x}</button>`).join('')}</div>`:`<p class="nada">No quedan horas libres este día.</p>`}
+  h+=`<h2 class="${datos.n&&datos.t?'ok':''}"><span>4</span>Tus datos</h2>
+    <label>Nombre<input id="nom" autocomplete="name" value="${esc(datos.n||'')}" placeholder="Tu nombre"></label>
+    <label>Teléfono<input id="tel" type="tel" inputmode="tel" autocomplete="tel" value="${esc(datos.t||'')}" placeholder="9 1234 5678"></label>
+    <p class="nota">Tu hora queda confirmada al instante. Solo se muestran horas libres${+P.ant?', con al menos '+(+P.ant)+' minutos de anticipación':''}.</p>
+    <p class="pie">Reservas con Silla</p>`;
+  $('#app').innerHTML=h;barra();
+}
+function listo(){return sel.s!=null&&sel.f&&sel.h&&(datos.n||'').trim().length>1&&(datos.t||'').replace(/\D/g,'').length>=8}
+function barra(){
+  $('#bar').style.display='';
+  const s=(P.s||[])[sel.s];
+  $('#res').innerHTML=error?`<div class="err">${esc(error)}</div>`:(s&&sel.f&&sel.h?`<b>${esc(s[0])}</b> · ${esc(fechaLarga(sel.f))} · <b>${sel.h}</b>`:'Completa los pasos para reservar');
+  const b=$('#send');b.disabled=!listo()||enviando;b.textContent=enviando?'Reservando…':'Confirmar reserva';
+}
+function renderHecho(){
+  $('#bar').style.display='none';
+  const s=(P.s||[])[hecho.s],ini=parse(hecho.f),[hh,mm]=hecho.h.split(':').map(Number);
+  ini.setHours(hh,mm);const fin=new Date(ini.getTime()+(+s[2]||30)*60000);
+  const g=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
+  const cal='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(s[0]+' en '+(P.n||'la barbería'))+'&dates='+g(ini)+'/'+g(fin)+'&ctz=America/Santiago';
+  $('#app').innerHTML=`<div class="box">${OK}<h1>¡Hora reservada!</h1><p>Te esperamos en ${esc(P.n||'la barbería')}.</p>
+    <div class="det"><div><span>Servicio</span><b>${esc(s[0])}</b></div><div><span>Día</span><b>${esc(fechaLarga(hecho.f))}</b></div><div><span>Hora</span><b>${esc(hecho.h)}</b></div><div><span>Valor</span><b>${clp(s[1])}</b></div></div>
+    <a class="btn" href="${esc(cal)}" target="_blank" rel="noopener">${CAL}Agregar a mi calendario</a>
+    ${P.w?`<a class="btn" href="https://wa.me/${esc(P.w)}?text=${encodeURIComponent('Hola, reservé para el '+fechaLarga(hecho.f)+' a las '+hecho.h+'. ')}" target="_blank" rel="noopener">${WA}¿Necesitas cambiarla? Escríbenos</a>`:''}
+    <button class="btn" id="otra">Hacer otra reserva</button></div>`;
+}
+async function confirmar(){
+  if(!listo()||enviando)return;
+  enviando=true;error='';barra();
+  try{
+    const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim()});
+    if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h};try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
+    const msg={ocupada:'Esa hora se acaba de tomar. Elige otra.',anticipacion:'Esa hora ya no se puede reservar. Elige una más tarde.',limite:'Ya tienes varias horas reservadas. Escríbele a la barbería.',cerrado:'Las reservas están en pausa.',datos:'Revisa tu nombre y teléfono.'}[j.error]||'No se pudo reservar. Inténtalo de nuevo.';
+    error=msg;
+    if(j.error==='ocupada'||j.error==='anticipacion'){const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora}sel.h=null}
+  }catch(e){error='Sin conexión. Revisa tu internet.'}
+  enviando=false;render();
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.id==='send'){confirmar();return}
+  if(t.id==='otra'){hecho=null;sel.h=null;cargar();return}
+  error='';
+  if(t.dataset.s!=null){sel.s=+t.dataset.s;sel.h=null}
+  else if(t.dataset.f){sel.f=t.dataset.f;sel.h=null}
+  else if(t.dataset.h){sel.h=t.dataset.h;setTimeout(()=>{const n=$('#nom');if(n&&!n.value)n.scrollIntoView({behavior:'smooth',block:'center'})},50)}
+  else return;
+  render();
+});
+document.addEventListener('input',e=>{if(e.target.id==='nom')datos.n=e.target.value;if(e.target.id==='tel')datos.t=e.target.value;barra()});
+setInterval(async()=>{if(hecho||!P||document.hidden)return;try{const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora;const foc=document.activeElement&&document.activeElement.tagName==='INPUT';if(!foc)render()}}catch(e){}},60000);
+cargar();
+})();
+</script>
+</body>
+</html>

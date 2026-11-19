@@ -1,0 +1,94 @@
+/* Silla · capa de diseño premium (barbería de hombres) */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Oswald:wght@500;600&display=swap');
+
+:root{
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --cond:"Oswald","Arial Narrow",sans-serif;
+  --oro:linear-gradient(135deg,var(--acc2) 0%,var(--acc) 55%,color-mix(in srgb,var(--acc) 70%,#000) 100%);
+  --brillo:inset 0 1px 0 rgba(255,255,255,.06);
+  --poste:repeating-linear-gradient(-45deg,#b3252f 0 7px,#f2ece2 7px 14px,#1f3a6e 14px 21px,#f2ece2 21px 28px);
+}
+html,body{
+  background:
+    radial-gradient(120% 60% at 50% -10%,color-mix(in srgb,var(--acc) 16%,transparent),transparent 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .035 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    var(--bg);
+  background-attachment:fixed;
+}
+[data-claro="1"] body,[data-claro="1"]{background-blend-mode:multiply}
+
+/* Títulos con carácter */
+.brand h1,.hero h1,.box h1,#modal h3,#bloqueo h2{font-family:var(--serif);font-weight:700;letter-spacing:.005em}
+.brand h1{font-size:20px}
+.brand small,h2,.chip small,.kpis span,.resumen span,nav.tabs button{font-family:var(--cond);letter-spacing:.12em;text-transform:uppercase}
+.brand small{font-size:10.5px;color:var(--acc2)}
+[data-claro="1"] .brand small{color:var(--acc2)}
+
+/* Franja de poste de barbero bajo el encabezado */
+header{border-bottom:0!important;box-shadow:0 1px 0 var(--line)}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-3px;height:3px;background:var(--poste);opacity:.85}
+.logo{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--acc) 70%,transparent),0 6px 18px rgba(0,0,0,.45)}
+
+/* Secciones */
+main h2{font-size:12px;font-weight:600;color:var(--acc2);display:flex;align-items:center;gap:10px}
+main h2::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--acc) 55%,transparent),transparent)}
+[data-claro="1"] main h2{color:var(--acc2)}
+
+/* Tarjetas con relieve */
+.card,.cita,.vacio,.resumen div,.serv,.chip,.horas button,.box,.hero{
+  background:linear-gradient(180deg,color-mix(in srgb,var(--card) 100%,#fff 2%),var(--card));
+  box-shadow:var(--brillo),0 8px 22px rgba(0,0,0,.28);
+}
+[data-claro="1"] .card,[data-claro="1"] .cita,[data-claro="1"] .serv,[data-claro="1"] .hero,[data-claro="1"] .box{box-shadow:0 6px 18px rgba(60,40,10,.08)}
+.cita{border-left-width:3px}
+.cita .h{font-family:var(--cond);font-size:17px;font-weight:600;letter-spacing:.02em;color:var(--acc2)}
+[data-claro="1"] .cita .h{color:var(--txt)}
+
+/* Botón principal en oro / metal */
+.btn.pri,.fab,.send:not(:disabled),.chip.on,.dias button.on,h2.ok span{
+  background:var(--oro)!important;border-color:transparent!important;color:var(--onacc)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 8px 24px color-mix(in srgb,var(--acc) 30%,transparent);
+}
+.send:not(:disabled){font-family:var(--cond);letter-spacing:.14em;text-transform:uppercase;font-weight:600}
+.btn.pri{font-family:var(--cond);letter-spacing:.06em;font-size:14.5px;text-transform:uppercase;font-weight:600}
+.fab{border-radius:50%!important;width:60px!important;height:60px!important}
+
+/* Barra inferior */
+nav.tabs{background:color-mix(in srgb,var(--card) 92%,transparent)!important;backdrop-filter:blur(14px)}
+nav.tabs button{font-size:10.5px!important}
+nav.tabs button.on{color:var(--acc2)!important;position:relative}
+nav.tabs button.on::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;border-radius:2px;background:var(--oro)}
+[data-claro="1"] nav.tabs button.on{color:var(--txt)!important}
+
+/* Resumen del día */
+.hoyres{border-radius:18px!important;position:relative;overflow:hidden}
+.hoyres::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--poste)}
+.hoyres .n{font-family:var(--serif);font-size:32px!important}
+.big{font-family:var(--serif)}
+
+/* ---------- Página de reservas ---------- */
+.hero{position:relative;overflow:hidden;border-radius:24px!important;padding:22px 18px!important;border-color:color-mix(in srgb,var(--acc) 35%,var(--line))!important}
+.hero::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--poste)}
+.hero::after{content:"";position:absolute;right:-60px;top:-60px;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--acc) 22%,transparent),transparent 70%);pointer-events:none}
+.avatar{
+  border-radius:50%!important;background:radial-gradient(circle at 35% 30%,var(--card2),var(--bg))!important;
+  color:var(--acc2)!important;font-family:var(--serif);font-size:28px!important;font-weight:700!important;
+  box-shadow:0 0 0 2px var(--acc),0 0 0 5px var(--card),0 0 0 6px color-mix(in srgb,var(--acc) 45%,transparent),0 10px 26px rgba(0,0,0,.5)!important;
+}
+[data-claro="1"] .avatar{color:var(--acc2)!important;background:var(--txt)!important}
+.hero h1{font-size:23px!important}
+.hero p{font-family:var(--cond);letter-spacing:.1em;text-transform:uppercase;font-size:11.5px!important;color:var(--acc2)!important}
+.hero a{position:relative;z-index:1;border-color:color-mix(in srgb,var(--acc) 40%,var(--line))!important}
+.wrap h2{font-family:var(--serif);font-size:19px!important;font-weight:700!important;letter-spacing:0;text-transform:none}
+.wrap h2 span{font-family:var(--cond);border-color:color-mix(in srgb,var(--acc) 50%,var(--line))!important}
+.serv b{font-size:16.5px}
+.serv .p{font-family:var(--serif);font-size:19px!important;font-weight:700!important}
+.chip b{font-family:var(--serif);font-size:21px!important}
+.horas button{font-family:var(--cond);font-size:16px;letter-spacing:.04em}
+.wrap .on{box-shadow:0 0 0 1px var(--acc),0 8px 22px color-mix(in srgb,var(--acc) 22%,transparent)!important}
+.pie{font-family:var(--cond);letter-spacing:.14em;text-transform:uppercase;font-size:10.5px!important}
+/* Herramientas */
+.herr{display:flex;align-items:center;gap:12px}
+.herr-ic{flex:none;width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:22px;font-weight:700;color:var(--onacc);background:var(--oro)}
+.herr-tx{flex:1;min-width:0}.herr-tx b{display:block;font-size:15px}.herr-tx small{color:var(--mut);font-size:12.5px;line-height:1.35;display:block}
+.herr .btn.sm{text-decoration:none}
