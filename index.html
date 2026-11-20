@@ -226,7 +226,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.2';
+const VERSION_APP='2.3';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -486,11 +486,32 @@ async function verificar(manual){
     const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),12000);
     const r=await fetch(API+'?'+q.toString(),{signal:ctl.signal});clearTimeout(t);
     const j=await r.json();
-    if(j&&j.ok){Object.assign(L,{estado:j.estado,hasta:j.hasta,gracia:j.gracia,precio:j.precio,cobro:j.cobro,transferir:j.transferir,codigo:j.codigo||L.codigo,revisado:Date.now()});saveL();if(manual)toast(j.estado==='pagado'?'¡Plan activo! Gracias':'Aún no vemos tu pago. Te avisamos apenas se confirme');sincronizar();pedirNuevas()}
+    if(j&&j.ok){Object.assign(L,{estado:j.estado,hasta:j.hasta,gracia:j.gracia,precio:j.precio,cobro:j.cobro,transferir:j.transferir,codigo:j.codigo||L.codigo,revisado:Date.now()});saveL();if(manual)toast(j.estado==='pagado'?'¡Plan activo! Gracias':'Plan revisado');sincronizar();pedirNuevas()}
   }catch(e){if(manual)toast('Sin conexión: inténtalo con internet')}
   verificando=false;render();
 }
 function avisarPago(pl){try{fetch(API+'?'+new URLSearchParams({accion:'aviso',id:L.id,m:pl.m,monto:pl.precio,barberia:S.config.nombre||'',nombre:(S.barberos[0]||{}).nombre||''}).toString()).catch(()=>{})}catch(e){}}
+async function postAPI(o){const r=await fetch(API,{method:'POST',body:JSON.stringify(o)});return r.json()}
+async function pagarPlan(m){
+  if(!navigator.onLine){toast('Necesitas internet para pagar');return}
+  const pl=planes().find(x=>x.m===m);toast('Abriendo Mercado Pago…');
+  try{let j=await postAPI({accion:'checkout',id:L.id,meses:m});
+    if(j.error==='sin-registro'){await verificar(false);j=await postAPI({accion:'checkout',id:L.id,meses:m})}
+    if(j.ok&&j.url){L.pagoPend=Date.now();saveL();location.href=j.url;return}}catch(e){}
+  avisarPago(pl);
+  if(pl.link){window.open(pl.link,'_blank');return}
+  const w=waCobro(pl);if(w){window.open(w,'_blank');return}
+  toast('No se pudo abrir el pago, intenta de nuevo')}
+async function enviarPago(){const el=$('#pgOp');const op=((el&&el.value)||'').replace(/\D/g,'');if(op.length<6){toast('Revisa el número de operación');return}toast('Revisando tu pago…');
+  try{const j=await postAPI({accion:'pago',id:L.id,op});
+    if(j.ok&&j.estado==='pagado'){L.estado='pagado';L.hasta=j.hasta;saveL();cerrar();render();pintarBloqueo();toast('¡Pago recibido! Plan activo')}
+    else if(j.ok&&j.pendiente){cerrar();toast('Recibimos tu aviso. Activamos tu plan apenas lo revisemos')}
+    else toast({usada:'Ese número de operación ya se usó','no-aprobado':'Ese pago todavía no está aprobado','no-encontrado':'No encontramos ese pago, revisa el número',monto:'El monto no alcanza para el plan',antiguo:'Ese pago es muy antiguo','sin-registro':'Completa tu registro primero'}[j.error]||'No se pudo revisar, intenta de nuevo')}
+  catch(e){toast('Sin conexión, intenta de nuevo')}}
+function revisarRetornoPago(){const q=new URLSearchParams(location.search).get('pago');if(!q)return;try{history.replaceState(null,'',location.pathname)}catch(e){}
+  if(q==='error'){toast('El pago no se completó. Puedes intentarlo de nuevo');return}
+  toast(q==='ok'?'¡Pago recibido! Activando tu plan…':'Tu pago está en revisión, te avisamos al activarse');let n=0;
+  const t=setInterval(async()=>{n++;try{await verificar(false)}catch(e){}if(plan().estado==='pagado'||n>8){clearInterval(t);render();pintarBloqueo();if(plan().estado==='pagado')toast('¡Plan activo! Gracias por confiar en Silla')}},5000)}
 function licCodigo(){return L.codigo||''}
 /* ---------- sincronizar con la página de reservas ---------- */
 let syncT=null,sincronizando=false;
@@ -554,6 +575,7 @@ function waCobro(pl){const p=plan();const n=normTel(p.cobro);if(!n)return'';
   return waLink(n,'Hola, quiero pagar mi plan de Silla ('+(pl?nombrePlan(pl.m)+': '+clp(pl.precio):clp(p.precio)+'/mes')+').\nBarbería: '+(S.config.nombre||'')+'\nNombre: '+((S.barberos[0]||{}).nombre||'')+'\nID: '+L.id)}
 function bannerPlan(){
   const p=plan();
+  if(p.estado==='prueba'&&p.dias>7)return`<div class="banner info" data-act="ver-plan">${ic('star')}<span>Prueba gratis: te quedan <b>${p.dias} días</b>. Toca para ver los planes.</span></div>`;
   if(p.estado==='prueba'&&p.dias<=7)return`<div class="banner info" data-act="ver-plan">${ic('star')}<span>${p.dias===0?'Tu prueba gratis termina <b>hoy</b>':'Te quedan <b>'+p.dias+' día'+(p.dias===1?'':'s')+'</b> de prueba gratis'}. Toca para ver cómo seguir.</span></div>`;
   if(p.estado==='vencido')return`<div class="banner mal" data-act="ver-plan">${ic('x')}<span>Tu plan venció. Tienes <b>${p.quedaGracia} día${p.quedaGracia===1?'':'s'}</b> para pagar antes de que Silla se pause.</span></div>`;
   return'';
@@ -564,15 +586,14 @@ function nombrePlan(m){return m===1?'Mensual':m===12?'Anual':m+' meses'}
 function planHTML(){
   const p=plan(),wa=waCobro();
   const txt={prueba:'Prueba gratis',pagado:'Plan activo',vencido:'Vencido',bloqueado:'Pausado'}[p.estado];
-  const ps=planes();if(!ps.some(x=>x.m===ui.planSel))ui.planSel=(ps.find(x=>x.m===12&&x.link)||ps.find(x=>x.link)||ps[0]).m;
+  const ps=planes();if(!ps.some(x=>x.m===ui.planSel))ui.planSel=12;
   const sel=ps.find(x=>x.m===ui.planSel);
   return`<div class="plan"><b>${txt}</b><span class="tag ${p.estado}">${p.estado==='pagado'?'Activo':p.estado==='prueba'?p.dias+' día'+(p.dias===1?'':'s'):'Pagar'}</span></div>
     <p class="hint" style="margin:0 0 12px">${p.estado==='pagado'?'Pagado hasta el '+fechaLarga(p.hasta)+'.':p.estado==='prueba'?'Gratis hasta el '+fechaLarga(p.hasta)+'. Si pagas antes, tus días se suman después.':'Venció el '+fechaLarga(p.hasta)+'.'}</p>
-    <div class="planes">${ps.map(x=>`<button class="pl${x.m===ui.planSel?' on':''}${x.top?' top':''}" data-act="plan-sel" data-v="${x.m}">${x.top?'<i>Mejor precio</i>':x.dsc?'<i class="d">-'+x.dsc+'%</i>':''}<span>${nombrePlan(x.m)}</span><b>${clp(x.precio)}</b><small>${x.m>1?clp(Math.round(x.precio/x.m))+' al mes':'mes a mes'}</small></button>`).join('')}</div>
-    ${sel.link?`<a class="btn pri pagar" href="${esc(sel.link)}" target="_blank" rel="noopener" data-act="pagar" data-v="${sel.m}">${ic('star')}Pagar ${clp(sel.precio)}</a>`
-      :wa?`<a class="btn pri pagar" href="${esc(waCobro(sel))}" target="_blank" rel="noopener" data-act="pagar" data-v="${sel.m}">${ic('wa')}Pagar ${clp(sel.precio)} por WhatsApp</a>`:`<p class="hint" style="text-align:center">Este plan estará disponible muy pronto. Mientras, puedes pagar mes a mes.</p>`}
-    <p class="hint seguro">Pago seguro con tarjeta de débito, crédito o saldo Mercado Pago.</p>
-    <button class="btn" data-act="revisar-plan" style="width:100%">${ic('undo')}Ya pagué: activar</button>
+    <div class="planes">${ps.map(x=>`<button class="pl${x.m===ui.planSel?' on':''}${x.top?' top':''}" data-act="plan-sel" data-v="${x.m}">${x.top?'<i>Mejor precio</i>':x.dsc?'<i class="d">-'+x.dsc+'%</i>':''}<span>${nombrePlan(x.m)}</span><b>${clp(x.precio)}</b><small>${x.m>1?clp(Math.round(x.precio/x.m))+' al mes':'cada mes'}</small>${x.m>1?`<small class="ah">Ahorras ${clp(4990*x.m-x.precio)}</small>`:''}</button>`).join('')}</div>
+    <button class="btn pri pagar" data-act="pagar" data-v="${sel.m}">${ic('star')}Suscribirme · ${clp(sel.precio)}</button>
+    <p class="hint seguro">🔒 Pago seguro con Mercado Pago · tu plan se activa solo</p>
+    <div class="row"><button class="btn sm" data-act="ya-pague">Ya pagué y no se activó</button><button class="btn sm" data-act="revisar-plan">${ic('undo')}Revisar mi plan</button></div>
     ${p.transferir?`<div class="linkbox" style="max-height:none;margin-top:10px">${esc(p.transferir)}</div>`:''}
     <p class="hint" style="margin-top:10px">Tu ID: ${esc(L.id)}</p>`;
 }
@@ -713,8 +734,9 @@ const A={
   'ver-plan':()=>{ui.tab='ajustes';render();window.scrollTo(0,0)},
   'revisar-plan':()=>verificar(true),
   'plan-sel':el=>{ui.planSel=+el.dataset.v;render();pintarBloqueo()},
-  pagar:el=>{const pl=planes().find(x=>x.m===+el.dataset.v);avisarPago(pl);L.pagoPend={m:pl.m,f:hoy()};saveL();
-    setTimeout(()=>modal(`<h3>¿Listo el pago?</h3><p>Cuando termines de pagar en Mercado Pago, vuelve aquí y toca <b style="color:var(--txt)">Ya pagué: activar</b>. Tu plan ${esc(nombrePlan(pl.m))} se activa apenas se confirma el pago, normalmente el mismo día.</p><div class="row"><button class="btn" data-act="cerrar">Después</button><button class="btn pri" data-act="revisar-cerrar">Ya pagué</button></div>`),600)},
+  pagar:el=>pagarPlan(+el.dataset.v),
+  'ya-pague':()=>modal(`<h3>Ya pagué</h3><p>Escribe el <b style="color:var(--txt)">número de operación</b> de tu pago. Lo encuentras en el comprobante de Mercado Pago (en la app: Actividad → tu pago → "N° de operación").</p><input id="pgOp" inputmode="numeric" placeholder="Ej: 91234567890"><div class="row" style="margin-top:12px"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn pri" data-act="enviar-pago">Activar mi plan</button></div>`),
+  'enviar-pago':()=>enviarPago(),
   'revisar-cerrar':()=>{cerrar();verificar(true)},
   compartir:()=>{try{navigator.share({title:'Reserva tu hora en '+S.config.nombre,text:'Reserva tu hora en '+S.config.nombre+' aquí:',url:enlaceReserva()}).catch(()=>{})}catch(e){copiarEnlace()}},
   ig:()=>copiarEnlace(ok=>modal(`<h3>Compartir en Instagram</h3><p>${ok?'Ya copiamos tu enlace.':'Primero copia el enlace del cuadro (mantén presionado y Copiar).'} Ahora pégalo en Instagram:</p>
@@ -790,6 +812,7 @@ if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostnam
 try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
 setSync(S.citas.length?'guardado en este equipo':'agenda');
 initRemote();
+revisarRetornoPago();
 })();
 </script>
 </body>

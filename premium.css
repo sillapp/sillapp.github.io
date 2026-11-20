@@ -108,3 +108,5 @@ nav.tabs button.on::before{content:"";position:absolute;top:0;left:30%;right:30%
 .pl.on span{color:var(--acc2)}
 .btn.pagar{width:100%;text-decoration:none;padding:15px 12px;font-size:15px;box-shadow:0 8px 22px color-mix(in srgb,var(--acc) 30%,transparent)}
 .hint.seguro{text-align:center;margin:8px 0 12px;font-size:12px}
+.pl small.ah{color:var(--ok);font-weight:600}
+.row .btn.sm{flex:1;font-size:13px;padding:10px 8px}
