@@ -1,1 +1,9 @@
-{"contador":""}
+{
+  "contador": "",
+  "planes": [
+    {"m": 1, "precio": 4990, "link": "https://mpago.la/1dkyEa5"},
+    {"m": 3, "precio": 13470, "link": ""},
+    {"m": 6, "precio": 25450, "link": ""},
+    {"m": 12, "precio": 47900, "link": ""}
+  ]
+}
