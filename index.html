@@ -172,6 +172,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
   <button data-act="tab" data-v="ajustes"><span class="t" data-ic="sliders"></span>Ajustes</button>
 </nav>
 <div id="modal"><div class="sheet"></div></div>
+<div id="guia" aria-modal="true" role="dialog"></div>
 <div id="toast"></div>
 <div id="bloqueo"><div class="box" id="bloqueoBox"></div></div>
 <script>
@@ -229,7 +230,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.4';
+const VERSION_APP='2.5';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -453,6 +454,7 @@ function vAjustes(){
   <h2>Mensaje de recordatorio</h2><div class="card">
     <textarea data-cfg="mensaje">${esc(c.mensaje)}</textarea>
     <p class="hint" style="margin-top:6px">Puedes usar: {cliente} {fecha} {hora} {servicio} {barbero} {barberia}. Se abre en WhatsApp con el mensaje listo; tú solo tocas enviar.</p></div>
+  <h2>Ayuda</h2><div class="card herr"><div class="herr-ic">?</div><div class="herr-tx"><b>Guía de Silla</b><small>Vuelve a ver cómo funciona la app, paso a paso.</small></div><button class="btn sm" data-act="ver-guia">Ver guía</button></div>
   <h2>Respaldo</h2><div class="card">
     <p class="hint">Copia tu respaldo y guárdalo en tus notas o mándatelo por WhatsApp. Para recuperarlo, pégalo abajo.</p>
     <button class="btn" data-act="copiar" style="width:100%;margin-bottom:10px">Copiar respaldo</button>
@@ -633,6 +635,27 @@ function pintarBloqueo(){
   $('#bloqueoBox').innerHTML=`${ic('pole')}<h2>Silla está en pausa</h2><p>Tu plan venció el ${esc(fechaLarga(p.hasta))}. Tus horas y clientes están guardados; paga tu plan para seguir usándola.</p><div class="card" style="text-align:left">${planHTML()}</div><button class="btn" data-act="copiar" style="width:100%;margin-top:6px">${ic('copy')}Copiar respaldo</button>`;
   el.classList.add('on');
 }
+/* ---------- guía de bienvenida ---------- */
+const GUIA=[
+  {ic:'pole',t:'Bienvenido a Silla',p:'Tu agenda de barbería en el bolsillo. En 1 minuto te mostramos cómo sacarle el jugo.',b:[['cal','Anota y ordena tus horas'],['globe','Tus clientes reservan solos'],['cash','Mira cuánto ganas']]},
+  {ic:'cal',t:'Tu agenda',p:'Todo tu día en una pantalla. Cambia de día con las flechas.',b:[['plus','Toca el botón + para anotar una hora'],['wa','Recuérdale al cliente por WhatsApp con un toque'],['check','Marca "Confirmó", "Atendido" o "No vino"']]},
+  {ic:'globe',t:'Reservas en línea',p:'El botón dorado del centro es tu página de reservas: lo que más te va a llenar la agenda.',b:[['send','Comparte tu enlace en WhatsApp, Instagram o Facebook'],['cal','Tus clientes eligen día y hora libre en un calendario'],['inbox','La hora cae sola en tu agenda y te avisamos']]},
+  {ic:'users',t:'Clientes y caja',p:'Silla guarda a cada cliente y suma lo que vas ganando.',b:[['users','Busca clientes por nombre o teléfono'],['cash','Ve lo ganado hoy, en la semana y en el mes'],['scissors','Edita tus servicios y precios en Ajustes']]},
+  {ic:'star',t:'30 días gratis',p:'Pruébala sin pagar nada. Después eliges tu plan desde Ajustes, con descuento si pagas varios meses.',b:[['sliders','Cambia colores y diseño en Ajustes'],['copy','Saca un respaldo de vez en cuando'],['star','Pago seguro con Mercado Pago']]}
+];
+let guiaI=0;
+function abrirGuia(){guiaI=0;pintarGuia();$('#guia').classList.add('on')}
+function pintarGuia(){const g=GUIA[guiaI],ult=guiaI===GUIA.length-1;
+  $('#guia').innerHTML=`<div class="gu-top"><span>${guiaI+1} de ${GUIA.length}</span>${ult?'':'<button data-act="guia-fin">Saltar</button>'}</div>
+  <div class="gu-body" key="${guiaI}"><div class="gu-ic">${g.ic==='pole'?ic('pole'):ic(g.ic)}</div><h2>${g.t}</h2><p>${g.p}</p>
+  <div class="gu-list">${g.b.map(([i,t])=>`<div><span>${ic(i)}</span>${t}</div>`).join('')}</div></div>
+  <div class="gu-bot"><div class="gu-dots">${GUIA.map((_,i)=>`<i class="${i===guiaI?'on':''}"></i>`).join('')}</div>
+  <div class="row">${guiaI?'<button class="btn" data-act="guia-ant">Atrás</button>':''}<button class="btn pri" data-act="${ult?'guia-fin':'guia-sig'}">${ult?'Empezar':'Siguiente'}</button></div></div>`}
+function cerrarGuia(){$('#guia').classList.remove('on');try{localStorage.setItem('silla_guia','1')}catch(e){}
+  if(!S.config.registrado)setTimeout(pedirRegistro,250)}
+(()=>{let x0=null;document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#guia'))x0=e.touches[0].clientX},{passive:true});
+  document.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)<50)return;
+    if(dx<0&&guiaI<GUIA.length-1){guiaI++;pintarGuia()}else if(dx>0&&guiaI>0){guiaI--;pintarGuia()}},{passive:true})})();
 function pedirRegistro(){
   const b=S.barberos[0]||{};
   modal(`<h3>Bienvenido a Silla</h3><p>Completa tus datos para empezar tu <b style="color:var(--txt)">prueba gratis de 30 días</b>.</p>
@@ -768,6 +791,10 @@ const A={
   'ya-pague':()=>modal(`<h3>Ya pagué</h3><p>Escribe el <b style="color:var(--txt)">número de operación</b> de tu pago. Lo encuentras en el comprobante de Mercado Pago (en la app: Actividad → tu pago → "N° de operación").</p><input id="pgOp" inputmode="numeric" placeholder="Ej: 91234567890"><div class="row" style="margin-top:12px"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn pri" data-act="enviar-pago">Activar mi plan</button></div>`),
   'enviar-pago':()=>enviarPago(),
   'revisar-cerrar':()=>{cerrar();verificar(true)},
+  'guia-sig':()=>{guiaI++;pintarGuia()},
+  'guia-ant':()=>{guiaI--;pintarGuia()},
+  'guia-fin':()=>cerrarGuia(),
+  'ver-guia':()=>abrirGuia(),
   'compartir-todo':()=>{if(navigator.share){A.compartir()}else copiarEnlace()},
   compartir:()=>{try{navigator.share({title:'Reserva tu hora en '+S.config.nombre,text:'Reserva tu hora en '+S.config.nombre+' aquí:',url:enlaceReserva()}).catch(()=>{})}catch(e){copiarEnlace()}},
   ig:()=>copiarEnlace(ok=>modal(`<h3>Compartir en Instagram</h3><p>${ok?'Ya copiamos tu enlace.':'Primero copia el enlace del cuadro (mantén presionado y Copiar).'} Ahora pégalo en Instagram:</p>
@@ -834,7 +861,9 @@ render();
 revisarHash();
 window.addEventListener('hashchange',revisarHash);
 window.aplicarTema&&aplicarTema(S.config.tema||'clasico');
-if(!S.config.registrado&&!location.hash)setTimeout(pedirRegistro,400);else verificar(false);
+const vioGuia=(()=>{try{return localStorage.getItem('silla_guia')}catch(e){return'1'}})();
+if(!vioGuia&&!location.hash)setTimeout(abrirGuia,300);else if(!S.config.registrado&&!location.hash)setTimeout(pedirRegistro,400);
+if(S.config.registrado)verificar(false);
 setInterval(()=>{if(!document.hidden)pedirNuevas()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){pedirNuevas();if(ui.tab==='agenda')render()}});
 window.addEventListener('online',()=>verificar(false));
