@@ -60,6 +60,45 @@ input:focus{outline:none;border-color:var(--acc)}
 .nota{font-size:13px;color:var(--mut);margin-top:6px;line-height:1.5}
 .err{color:var(--bad);font-size:14px;margin-bottom:8px}
 .pie{text-align:center;color:var(--mut);font-size:12px;margin-top:30px;opacity:.7}
+
+.prox{display:flex;align-items:center;gap:12px;width:100%;text-align:left;margin-bottom:12px;padding:13px 14px;border-radius:16px;cursor:pointer;border:1.5px solid color-mix(in srgb,var(--acc) 55%,var(--line));background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 16%,var(--card)),var(--card))}
+.prox>span{width:38px;height:38px;flex:none;border-radius:12px;background:var(--acc);color:var(--onacc);display:flex;align-items:center;justify-content:center;font-size:18px}
+.prox small{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--acc2);font-weight:700}
+.prox b{font-size:15px}
+.prox em{margin-left:auto;font-style:normal;font-weight:800;font-size:13px;color:var(--acc2)}
+.cal{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:14px 12px 12px;box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.cal-h{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cal-h>div{text-align:center;line-height:1.2}
+.cal-h>div b{font-size:19px;font-weight:800}
+.cal-h>div span{font-size:15px;color:var(--mut);font-weight:600}
+.cal-h small{display:block;font-size:12px;color:var(--mut);margin-top:3px}
+.cal-n{width:42px;height:42px;border-radius:14px;border:1.5px solid var(--line);background:var(--card2);font-size:22px;line-height:1;cursor:pointer;color:var(--txt)}
+.cal-n:disabled{opacity:.25;cursor:default}
+.cal-w,.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-w span{text-align:center;font-size:11.5px;font-weight:700;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;padding:4px 0}
+.cd{position:relative;aspect-ratio:1/1.05;border-radius:13px;border:1.5px solid transparent;background:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-variant-numeric:tabular-nums;transition:transform .12s,background .12s}
+.cd b{font-size:16px;font-weight:700}
+.cd i{width:6px;height:6px;border-radius:50%;background:transparent}
+.cd.libre{background:var(--card2);border-color:var(--line)}
+.cd.libre i{background:var(--ok)}
+.cd.pocas{background:var(--card2);border-color:var(--line)}
+.cd.pocas i{background:var(--acc)}
+.cd.lleno b{text-decoration:line-through;opacity:.45}
+.cd.lleno i{background:var(--bad);opacity:.7}
+.cd.cerrado,.cd.fuera{opacity:.28}
+.cd:not(:disabled):active{transform:scale(.92)}
+.cd.hoy b{color:var(--acc2)}
+.cd.hoy::after{content:"";position:absolute;inset:3px;border-radius:10px;border:1px dashed color-mix(in srgb,var(--acc) 60%,transparent);pointer-events:none}
+.cd.on{background:var(--acc)!important;border-color:var(--acc)!important;box-shadow:0 6px 16px color-mix(in srgb,var(--acc) 45%,transparent)}
+.cd.on b{color:var(--onacc);text-decoration:none;opacity:1}
+.cd.on i{background:var(--onacc)}
+.cd:disabled{cursor:default}
+.cal-l{display:flex;justify-content:center;gap:14px;margin-top:12px;font-size:11.5px;color:var(--mut)}
+.cal-l span{display:flex;align-items:center;gap:5px}
+.cal-l i{width:7px;height:7px;border-radius:50%}.cal-l .l1{background:var(--ok)}.cal-l .l2{background:var(--acc)}.cal-l .l3{background:var(--bad)}
+.dia-sel{font-weight:800;font-size:16px;margin:0 0 10px;scroll-margin-top:16px}
+.hgrupo{margin-bottom:12px}
+.hgrupo small{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:7px}
 </style>
 <link rel="stylesheet" href="premium.css">
 </head>
@@ -85,7 +124,7 @@ const OK='<svg width="64" height="64" viewBox="0 0 48 48" fill="none"><circle cx
 
 const codigo=new URLSearchParams(location.search).get('b')||(()=>{const p=decodeURIComponent(location.pathname.split('/').filter(Boolean).pop()||'');return /^(r|r\.html|silla|index\.html)$/i.test(p)?'':p})();
 let P=null,ocupado=[],ahora=null,activo=true;
-let sel={s:null,f:null,h:null};
+let sel={s:null,f:null,h:null},cal=null;
 let datos=(()=>{try{return JSON.parse(localStorage.getItem('silla_cliente'))||{}}catch(e){return{}}})();
 let enviando=false,hecho=null,error='';
 
@@ -109,6 +148,24 @@ function pantalla(t,p,wa){
 function hoyF(){return ahora&&ahora.f?ahora.f:ymd(new Date())}
 function minAhora(){if(ahora&&ahora.m!=null)return ahora.m+Math.floor((Date.now()-cargado)/60000);const d=new Date();return d.getHours()*60+d.getMinutes()}
 const cargado=Date.now();
+function maxF(){const b=parse(hoyF()),m=Math.min(12,Math.max(1,+P.mx||3));return ymd(new Date(b.getFullYear(),b.getMonth()+m,b.getDate()))}
+function abre(f){const ds=P.d&&P.d.length?P.d:[1,2,3,4,5,6];return ds.indexOf(parse(f).getDay())>=0&&f>=hoyF()&&f<=maxF()}
+function primera(s){const b=parse(hoyF()),mx=maxF();for(let i=0;i<400;i++){const f=ymd(new Date(b.getFullYear(),b.getMonth(),b.getDate()+i));if(f>mx)break;if(abre(f)){const l=libres(f,s);if(l.length)return{f,h:l[0]}}}return null}
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+function calHTML(){
+  const hoy=hoyF(),b=parse(hoy),mx=parse(maxF());
+  if(!cal){const r=sel.f?parse(sel.f):b;cal={y:r.getFullYear(),m:r.getMonth()}}
+  const primero=new Date(cal.y,cal.m,1),ult=new Date(cal.y,cal.m+1,0).getDate(),off=(primero.getDay()+6)%7;
+  const puedeAtras=cal.y*12+cal.m>b.getFullYear()*12+b.getMonth(),puedeAdel=cal.y*12+cal.m<mx.getFullYear()*12+mx.getMonth();
+  let g='';for(let i=0;i<off;i++)g+='<span></span>';
+  let libresMes=0;
+  for(let d=1;d<=ult;d++){const f=ymd(new Date(cal.y,cal.m,d));let cls='',n=0,dis=true;
+    if(f<hoy||f>maxF())cls='fuera';else if(!abre(f))cls='cerrado';else{n=libres(f,sel.s).length;if(n){dis=false;cls=n<=3?'pocas':'libre';libresMes++}else cls='lleno'}
+    g+=`<button class="cd ${cls}${sel.f===f?' on':''}${f===hoy?' hoy':''}" data-f="${f}" ${dis?'disabled':''} aria-label="${esc(fechaLarga(f))}${n?', '+n+' horas libres':''}"><b>${d}</b><i></i></button>`}
+  return`<div class="cal"><div class="cal-h"><button class="cal-n" data-cal="-1" ${puedeAtras?'':'disabled'} aria-label="Mes anterior">‹</button><div><b>${MESES[cal.m]}</b> <span>${cal.y}</span><small>${libresMes?libresMes+' día'+(libresMes===1?'':'s')+' con horas libres':'Sin horas libres este mes'}</small></div><button class="cal-n" data-cal="1" ${puedeAdel?'':'disabled'} aria-label="Mes siguiente">›</button></div>
+    <div class="cal-w">${['Lu','Ma','Mi','Ju','Vi','Sá','Do'].map(x=>`<span>${x}</span>`).join('')}</div><div class="cal-g">${g}</div>
+    <div class="cal-l"><span><i class="l1"></i>Disponible</span><span><i class="l2"></i>Pocas horas</span><span><i class="l3"></i>Lleno</span></div></div>`;
+}
 function dias(){const out=[],ds=P.d&&P.d.length?P.d:[1,2,3,4,5,6],base=parse(hoyF());for(let i=0;out.length<14&&i<40;i++){const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i);if(ds.indexOf(d.getDay())>=0)out.push(ymd(d))}return out}
 function libres(f,s){
   const dur=+((P.s||[])[s]||[])[2]||30,st=+P.v||30,a=toMin(P.i||'10:00'),b=toMin(P.f||'20:00'),ant=+P.ant||30,out=[];
@@ -128,10 +185,14 @@ function render(){
   h+=`<h2 class="${sel.s!=null?'ok':''}"><span>1</span>Elige el servicio</h2>`+S.map((s,i)=>`<button class="serv ${sel.s===i?'on':''}" data-s="${i}"><div><b>${esc(s[0])}</b><small>${+s[2]||30} min</small></div><span class="p">${clp(s[1])}</span></button>`).join('');
   h+=`<h2 class="${sel.f?'ok':''}"><span>2</span>Elige el día</h2>`;
   if(sel.s==null)h+=`<p class="nada">Primero elige un servicio.</p>`;
-  else h+=`<div class="chips">`+dias().map(f=>{const d=parse(f),n=libres(f,sel.s).length;return`<button class="chip ${sel.f===f?'on':''}" data-f="${f}" ${n?'':'disabled'}><small>${f===hoyF()?'Hoy':d.toLocaleDateString('es-CL',{weekday:'short'}).replace('.','')}</small><b>${d.getDate()}</b><small>${n?n+' libre'+(n===1?'':'s'):'Lleno'}</small></button>`}).join('')+`</div>`;
+  else{const pr=primera(sel.s);
+    if(pr&&!sel.f)h+=`<button class="prox" data-pf="${pr.f}" data-ph="${pr.h}"><span>⚡</span><div><small>Próxima hora libre</small><b>${esc(fechaLarga(pr.f))} · ${pr.h}</b></div><em>Elegir</em></button>`;
+    h+=calHTML()}
   h+=`<h2 class="${sel.h?'ok':''}"><span>3</span>Elige la hora</h2>`;
   if(sel.s==null||!sel.f)h+=`<p class="nada">Elige el día para ver las horas libres.</p>`;
-  else{const hs=libres(sel.f,sel.s);if(sel.h&&hs.indexOf(sel.h)<0)sel.h=null;h+=hs.length?`<div class="horas">${hs.map(x=>`<button class="${sel.h===x?'on':''}" data-h="${x}">${x}</button>`).join('')}</div>`:`<p class="nada">No quedan horas libres este día.</p>`}
+  else{const hs=libres(sel.f,sel.s);if(sel.h&&hs.indexOf(sel.h)<0)sel.h=null;h+=`<p class="dia-sel">${esc(fechaLarga(sel.f))}</p>`;
+    const grupos=[['Mañana',0,720],['Tarde',720,1080],['Noche',1080,1440]].map(([t,a,b])=>[t,hs.filter(x=>toMin(x)>=a&&toMin(x)<b)]).filter(x=>x[1].length);
+    h+=hs.length?grupos.map(([t,l])=>`<div class="hgrupo"><small>${t}</small><div class="horas">${l.map(x=>`<button class="${sel.h===x?'on':''}" data-h="${x}">${x}</button>`).join('')}</div></div>`).join(''):`<p class="nada">No quedan horas libres este día.</p>`}
   h+=`<h2 class="${datos.n&&datos.t?'ok':''}"><span>4</span>Tus datos</h2>
     <label>Nombre<input id="nom" autocomplete="name" value="${esc(datos.n||'')}" placeholder="Tu nombre"></label>
     <label>Teléfono<input id="tel" type="tel" inputmode="tel" autocomplete="tel" value="${esc(datos.t||'')}" placeholder="9 1234 5678"></label>
@@ -175,8 +236,10 @@ document.addEventListener('click',e=>{
   if(t.id==='send'){confirmar();return}
   if(t.id==='otra'){hecho=null;sel.h=null;cargar();return}
   error='';
+  if(t.dataset.cal){const d=new Date(cal.y,cal.m+(+t.dataset.cal),1);cal={y:d.getFullYear(),m:d.getMonth()};render();return}
+  if(t.dataset.pf){sel.f=t.dataset.pf;sel.h=t.dataset.ph;const d=parse(sel.f);cal={y:d.getFullYear(),m:d.getMonth()};render();setTimeout(()=>{const n=$('#nom');if(n)n.scrollIntoView({behavior:'smooth',block:'center'})},60);return}
   if(t.dataset.s!=null){sel.s=+t.dataset.s;sel.h=null}
-  else if(t.dataset.f){sel.f=t.dataset.f;sel.h=null}
+  else if(t.dataset.f){sel.f=t.dataset.f;sel.h=null;render();setTimeout(()=>{const x=document.querySelector('.dia-sel');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
   else if(t.dataset.h){sel.h=t.dataset.h;setTimeout(()=>{const n=$('#nom');if(n&&!n.value)n.scrollIntoView({behavior:'smooth',block:'center'})},50)}
   else return;
   render();

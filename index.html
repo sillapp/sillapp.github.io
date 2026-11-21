@@ -167,6 +167,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 <nav class="tabs">
   <button data-act="tab" data-v="agenda"><span class="t" data-ic="cal"></span>Agenda</button>
   <button data-act="tab" data-v="clientes"><span class="t" data-ic="users"></span>Clientes</button>
+  <button data-act="tab" data-v="reservas" class="tab-res"><span class="t" data-ic="globe"></span>Reservas</button>
   <button data-act="tab" data-v="caja"><span class="t" data-ic="cash"></span>Caja</button>
   <button data-act="tab" data-v="ajustes"><span class="t" data-ic="sliders"></span>Ajustes</button>
 </nav>
@@ -220,13 +221,15 @@ const P={
   fb:'<rect x="3" y="3" width="18" height="18" rx="5"/><path d="M15.5 8H14a2 2 0 0 0-2 2v11M9.5 13h5"/>',
   ig:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r=".8" fill="currentColor"/>',
   qr:'<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v7h-4M14 18v3"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/>',
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
   inbox:'<path d="M3 13l3-8h12l3 8v6H3z"/><path d="M3 13h5l1 3h6l1-3h5"/>'
 };
 function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(P[n]||'')+'</svg>'}
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.3';
+const VERSION_APP='2.4';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -338,7 +341,8 @@ function render(){
   if(ui.tab==='agenda')m.innerHTML=vAgenda();
   else if(ui.tab==='clientes'){m.innerHTML=vClientes();pintarClientes()}
   else if(ui.tab==='caja')m.innerHTML=vCaja();
-  else{m.innerHTML=vAjustes();pintarQR()}
+  else if(ui.tab==='reservas'){m.innerHTML=vReservas();pintarQR()}
+  else m.innerHTML=vAjustes();
   pintarBloqueo();
 }
 
@@ -443,14 +447,6 @@ function vAjustes(){
     <label>Bloques de agenda<select data-cfg="intervalo">${[15,20,30,60].map(v=>`<option value="${v}" ${+c.intervalo===v?'selected':''}>Cada ${v} minutos</option>`).join('')}</select></label></div>
   <h2>Herramientas</h2><div class="card herr"><div class="herr-ic">$</div><div class="herr-tx"><b>Contador de Bolsillo</b><small>Ganancias, IVA y lo del SII de tu negocio, en simple.</small></div>${EXTRAS.contador?`<a class="btn sm pri" href="${EXTRAS.contador}" target="_blank" rel="noopener">Descargar</a>`:`<span class="tag prueba">Muy pronto</span>`}</div>
   <h2>Diseño</h2><div class="card"><p class="hint">Elige cómo se ve tu app y tu página de reservas.</p><div class="temas">${Object.entries(window.SILLA_TEMAS||{}).map(([k,t])=>`<button class="tema ${(c.tema||'clasico')===k?'on':''}" data-act="tema" data-v="${k}"><div class="mini" style="background:${t.bg};border:1px solid ${t.line}"><i style="background:${t.acc};width:60%"></i><i style="background:${t.card2}"></i><i style="background:${t.card2};width:75%"></i></div><small>${t.nombre}</small></button>`).join('')}</div></div>
-  <h2>Enlace de reservas</h2><div class="card">
-    <p class="hint">Tus clientes ven solo tus horas libres y reservan al instante. La hora aparece sola en tu agenda.</p>
-    <label>Tu WhatsApp (para que te contacten)<input data-cfg="whatsapp" type="tel" inputmode="tel" placeholder="9 1234 5678" value="${esc(c.whatsapp||'')}"></label>
-    <label style="margin-bottom:0">Días de atención</label><div class="dias">${[1,2,3,4,5,6,0].map(d=>`<button data-act="dia-at" data-v="${d}" class="${(c.dias||[]).indexOf(d)>=0?'on':''}">${DIAS[d]}</button>`).join('')}</div>
-    <label>Anticipación mínima para reservar<select data-cfg="ant">${[15,30,60,120].map(v=>`<option value="${v}" ${(+c.ant||30)===v?'selected':''}>${v<60?v+' minutos':(v/60)+' hora'+(v>60?'s':'')} antes</option>`).join('')}</select></label>
-    <label>Correo para avisos (cada reserva y resumen de la mañana)<input data-cfg="correo" type="email" inputmode="email" placeholder="tucorreo@gmail.com" value="${esc(c.correo||'')}"></label>
-    ${notifHTML()}
-    ${compartirHTML()}</div>
   <h2>Servicios</h2><div class="card"><div class="srow" style="font-size:12px;color:var(--mut)"><span>Nombre</span><span>Precio</span><span>Minutos</span><span></span></div>
     ${S.servicios.map(s=>`<div class="srow"><input data-sid="${s.id}" data-k="nombre" value="${esc(s.nombre)}"><input data-sid="${s.id}" data-k="precio" type="number" inputmode="numeric" min="0" step="500" value="${+s.precio||0}"><select data-sid="${s.id}" data-k="duracion">${durs.map(d=>`<option ${+s.duracion===d?'selected':''}>${d}</option>`).join('')}</select><button class="x" data-act="del-serv" data-id="${s.id}" aria-label="Quitar">×</button></div>`).join('')}
     <button class="btn sm" data-act="add-serv">+ Agregar servicio</button></div>
@@ -464,6 +460,40 @@ function vAjustes(){
     <div class="row"><button class="btn" data-act="importar">Restaurar respaldo</button></div>
     <div class="row" style="margin-top:14px"><button class="btn danger" data-act="borrar-todo">Borrar todas las horas</button></div></div>
   <p class="sync">Tus datos se guardan en este celular y Silla funciona sin internet. Copia un respaldo de vez en cuando.</p>`;
+}
+
+function vReservas(){
+  const c=S.config,h0=hoy(),link=enlaceReserva(),n=c.nombre||'Mi Barbería';
+  const web=S.citas.filter(x=>x.origen==='enlace'),prox=web.filter(x=>x.fecha>=h0&&x.estado!=='novino').sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora));
+  const mesAct=h0.slice(0,7),delMes=web.filter(x=>x.fecha.slice(0,7)===mesAct).length,plata=web.filter(x=>x.fecha.slice(0,7)===mesAct&&x.estado!=='novino').reduce((t,x)=>t+(+x.precio||0),0);
+  const dias=(c.dias||[1,2,3,4,5,6]),txtDias=[1,2,3,4,5,6,0].filter(d=>dias.indexOf(d)>=0).map(d=>DIAS[d]).join(' · ');
+  let h=`<div class="rs-hero"><div class="rs-poste"></div>
+    <div class="rs-top"><div class="rs-av">${esc(n.trim().charAt(0).toUpperCase())}</div><div><small>Tu página de reservas</small><b>${esc(n)}</b></div><span class="rs-live"><i></i>En línea</span></div>
+    <p class="rs-sub">Tus clientes eligen servicio, día y hora libre, y la hora cae sola en tu agenda. Atiendes ${esc(txtDias)} · ${esc(c.inicio||'10:00')} a ${esc(c.fin||'20:00')}.</p>`;
+  if(!link)h+=`<p class="hint" style="margin:6px 0 0">Conéctate a internet para generar tu enlace.</p></div>`;
+  else h+=`<textarea class="linkta rs-link" readonly aria-label="Tu enlace de reservas">${esc(link)}</textarea>
+    <div class="row"><button class="btn pri" data-act="compartir-todo">${ic('send')}Compartir</button><a class="btn" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">${ic('eye')}Ver mi página</a></div></div>`;
+  h+=`<div class="rs-stats"><div><b>${prox.length}</b><span>próximas por enlace</span></div><div><b>${delMes}</b><span>reservas este mes</span></div><div><b>${clp(plata)}</b><span>generado este mes</span></div></div>`;
+  if(link){const u=encodeURIComponent(link),msg='Reserva tu hora en '+n+' aquí: ';
+    h+=`<h2>Compartir en</h2><div class="share rs-share">
+    <a class="sbtn wa" href="https://wa.me/?text=${encodeURIComponent(msg+link)}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a>
+    <button class="sbtn ig" data-act="ig">${ic('ig')}Instagram</button>
+    <a class="sbtn fb" href="https://www.facebook.com/sharer/sharer.php?u=${u}" target="_blank" rel="noopener">${ic('fb')}Facebook</a>
+    <a class="sbtn tg" href="https://t.me/share/url?url=${u}&text=${encodeURIComponent('Reserva tu hora en '+n)}" target="_blank" rel="noopener">${ic('tg')}Telegram</a>
+    <button class="sbtn" data-act="copiar-enlace">${ic('copy')}Copiar</button>
+    ${navigator.share?`<button class="sbtn" data-act="compartir">${ic('send')}Más apps</button>`:`<a class="sbtn" href="${esc(link)}" target="_blank" rel="noopener">${ic('link')}Abrir</a>`}</div>
+    <h2>Código QR</h2><div class="card rs-qr"><div class="qrwrap"><div id="qr"></div></div><div><b>Para el local y tus historias</b><p class="hint">Imprímelo en el espejo o en la caja, o sácale pantallazo y súbelo a Instagram. Al escanearlo abre tu página de reservas.</p></div></div>`}
+  h+=`<h2>Próximas reservas por enlace</h2>`+(prox.length?`<div class="card rs-list">${prox.slice(0,6).map(x=>`<div class="rs-it" data-act="ver-dia" data-v="${x.fecha}"><div class="rs-d"><b>${parse(x.fecha).getDate()}</b><small>${parse(x.fecha).toLocaleDateString('es-CL',{month:'short'}).replace('.','')}</small></div><div class="rs-tx"><b>${esc(x.cliente)}</b><small>${esc(x.hora)} · ${esc(x.servicio||'')}</small></div><span>${clp(x.precio)}</span></div>`).join('')}${prox.length>6?`<p class="hint" style="margin:8px 0 0;text-align:center">y ${prox.length-6} más en tu agenda</p>`:''}</div>`:`<div class="card"><p class="hint" style="margin:0;text-align:center">Todavía no hay reservas por enlace. Compártelo en tus redes para llenar la agenda.</p></div>`);
+  h+=`<h2>Cómo reciben tus clientes</h2><div class="card">
+    <label style="margin-bottom:0">Días de atención</label><div class="dias">${[1,2,3,4,5,6,0].map(d=>`<button data-act="dia-at" data-v="${d}" class="${dias.indexOf(d)>=0?'on':''}">${DIAS[d]}</button>`).join('')}</div>
+    <div class="grid2"><label>Abre<input type="time" data-cfg="inicio" value="${esc(c.inicio)}"></label><label>Cierra<input type="time" data-cfg="fin" value="${esc(c.fin)}"></label></div>
+    <label>Pueden reservar hasta<select data-cfg="meses">${[1,2,3,6].map(v=>`<option value="${v}" ${(+c.meses||3)===v?'selected':''}>${v===1?'1 mes':v+' meses'} adelante</option>`).join('')}</select></label>
+    <label>Anticipación mínima para reservar<select data-cfg="ant">${[15,30,60,120].map(v=>`<option value="${v}" ${(+c.ant||30)===v?'selected':''}>${v<60?v+' minutos':(v/60)+' hora'+(v>60?'s':'')} antes</option>`).join('')}</select></label>
+    <label>Tu WhatsApp (botón de contacto en tu página)<input data-cfg="whatsapp" type="tel" inputmode="tel" placeholder="9 1234 5678" value="${esc(c.whatsapp||'')}"></label>
+    <label>Correo para avisos (cada reserva y resumen de la mañana)<input data-cfg="correo" type="email" inputmode="email" placeholder="tucorreo@gmail.com" value="${esc(c.correo||'')}"></label>
+    ${notifHTML()}
+    <p class="hint" style="margin:0">Los cambios se actualizan solos en tu página. Precios y servicios se editan en Ajustes.</p></div>`;
+  return h;
 }
 
 /* ---------- plan y suscripción ---------- */
@@ -521,10 +551,10 @@ async function sincronizar(){
   sincronizando=true;
   try{
     const c=S.config,h0=hoy();
-    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30};
+    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3};
     const ocupado=S.citas.filter(x=>x.fecha>=h0&&x.estado!=='novino').map(x=>[x.fecha,x.hora,+x.duracion||30,x.id,(x.cliente||'').split(' ')[0]]);
     const r=await fetch(API,{method:'POST',body:JSON.stringify({accion:'perfil',id:L.id,correo:c.correo||'',perfil,ocupado})});
-    const j=await r.json();if(j&&j.codigo&&j.codigo!==L.codigo){L.codigo=j.codigo;saveL();if(ui.tab==='ajustes')render()}
+    const j=await r.json();if(j&&j.codigo&&j.codigo!==L.codigo){L.codigo=j.codigo;saveL();if(ui.tab==='reservas')render()}
   }catch(e){}
   sincronizando=false;
 }
@@ -738,6 +768,7 @@ const A={
   'ya-pague':()=>modal(`<h3>Ya pagué</h3><p>Escribe el <b style="color:var(--txt)">número de operación</b> de tu pago. Lo encuentras en el comprobante de Mercado Pago (en la app: Actividad → tu pago → "N° de operación").</p><input id="pgOp" inputmode="numeric" placeholder="Ej: 91234567890"><div class="row" style="margin-top:12px"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn pri" data-act="enviar-pago">Activar mi plan</button></div>`),
   'enviar-pago':()=>enviarPago(),
   'revisar-cerrar':()=>{cerrar();verificar(true)},
+  'compartir-todo':()=>{if(navigator.share){A.compartir()}else copiarEnlace()},
   compartir:()=>{try{navigator.share({title:'Reserva tu hora en '+S.config.nombre,text:'Reserva tu hora en '+S.config.nombre+' aquí:',url:enlaceReserva()}).catch(()=>{})}catch(e){copiarEnlace()}},
   ig:()=>copiarEnlace(ok=>modal(`<h3>Compartir en Instagram</h3><p>${ok?'Ya copiamos tu enlace.':'Primero copia el enlace del cuadro (mantén presionado y Copiar).'} Ahora pégalo en Instagram:</p>
     <div class="sol"><div><span>En tu perfil</span>Editar perfil → Enlaces</div><div><span>En una historia</span>Sticker "Enlace"</div><div><span>Con el QR</span>Sube el pantallazo</div></div>
@@ -793,7 +824,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.classList.contains('pick')){ui.fecha=el.value||hoy();render();return}
-  if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp')render()}
+  if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant'||k==='meses')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp')render()}
   else if(el.dataset.sid){const s=serv(el.dataset.sid);if(!s)return;const k=el.dataset.k;s[k]=k==='nombre'?el.value.trim()||s.nombre:Math.max(0,+el.value||0);touch('config');toast('Guardado')}
   else if(el.dataset.bid){const b=barb(el.dataset.bid);if(b&&el.value.trim()){b.nombre=el.value.trim();touch('config');toast('Guardado')}}
 });
