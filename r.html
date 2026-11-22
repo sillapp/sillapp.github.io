@@ -100,7 +100,7 @@ input:focus{outline:none;border-color:var(--acc)}
 .hgrupo{margin-bottom:12px}
 .hgrupo small{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:7px}
 </style>
-<link rel="stylesheet" href="premium.css">
+<link rel="stylesheet" href="premium.css?v=28">
 </head>
 <body>
 <div class="wrap" id="app"><div class="skel" style="height:96px"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
@@ -172,6 +172,7 @@ function libres(f,s){
   const lim=f===hoyF()?minAhora()+ant:-1;
   for(let t=a;t+dur<=b;t+=st){
     if(t<lim)continue;
+    if(P.al&&+P.al[1]&&t<toMin(P.al[0])+(+P.al[1])&&toMin(P.al[0])<t+dur)continue;
     if(ocupado.some(o=>o[0]===f&&toMin(o[1])<t+dur&&t<toMin(o[1])+(+o[2]||30)))continue;
     out.push(toHH(t));
   }
@@ -181,7 +182,7 @@ function render(){
   if(hecho)return renderHecho();
   const S=P.s||[];
   if(sel.s==null&&S.length===1)sel.s=0;
-  let h=`<div class="hero"><div class="avatar">${esc((P.n||'B').trim().charAt(0).toUpperCase())}</div><div><h1>${esc(P.n||'Barbería')}</h1><p>${P.b?'Reserva con '+esc(P.b):'Reserva tu hora en un minuto'}</p></div>${P.w?`<a href="https://wa.me/${esc(P.w)}" target="_blank" rel="noopener" aria-label="WhatsApp">${WA}</a>`:''}</div>`;
+  let h=`<div class="hero"><div class="avatar${P.lg?' img':''}">${P.lg&&/^data:image\/(webp|png|jpeg);base64,/.test(P.lg)?`<img src="${P.lg}" alt="">`:esc((P.n||'B').trim().charAt(0).toUpperCase())}</div><div><h1>${esc(P.n||'Barbería')}</h1><p>${P.b?'Reserva con '+esc(P.b):'Reserva tu hora en un minuto'}</p></div>${P.w?`<a href="https://wa.me/${esc(P.w)}" target="_blank" rel="noopener" aria-label="WhatsApp">${WA}</a>`:''}</div>`;
   h+=`<h2 class="${sel.s!=null?'ok':''}"><span>1</span>Elige el servicio</h2>`+S.map((s,i)=>`<button class="serv ${sel.s===i?'on':''}" data-s="${i}"><div><b>${esc(s[0])}</b><small>${+s[2]||30} min</small></div><span class="p">${clp(s[1])}</span></button>`).join('');
   h+=`<h2 class="${sel.f?'ok':''}"><span>2</span>Elige el día</h2>`;
   if(sel.s==null)h+=`<p class="nada">Primero elige un servicio.</p>`;
@@ -225,7 +226,7 @@ async function confirmar(){
   try{
     const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim()});
     if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h};try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
-    const msg={ocupada:'Esa hora se acaba de tomar. Elige otra.',anticipacion:'Esa hora ya no se puede reservar. Elige una más tarde.',limite:'Ya tienes varias horas reservadas. Escríbele a la barbería.',cerrado:'Las reservas están en pausa.',datos:'Revisa tu nombre y teléfono.'}[j.error]||'No se pudo reservar. Inténtalo de nuevo.';
+    const msg={ocupada:'Esa hora se acaba de tomar. Elige otra.',anticipacion:'Esa hora ya no se puede reservar. Elige una más tarde.',limite:'Ya tienes varias horas reservadas. Escríbele a la barbería.',cerrado:'Las reservas están en pausa.',almuerzo:'Esa hora es de almuerzo. Elige otra.',datos:'Revisa tu nombre y teléfono.'}[j.error]||'No se pudo reservar. Inténtalo de nuevo.';
     error=msg;
     if(j.error==='ocupada'||j.error==='anticipacion'){const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora}sel.h=null}
   }catch(e){error='Sin conexión. Revisa tu internet.'}

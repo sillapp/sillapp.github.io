@@ -158,10 +158,35 @@ textarea{min-height:92px;resize:vertical}
 h1,h2,h3,b,strong{letter-spacing:-.01em}
 .sync{font-size:12px;color:var(--mut);text-align:center;margin-top:16px}
 </style>
-<link rel="stylesheet" href="premium.css">
+<style>/* Guía de bienvenida */
+#guia{position:fixed;inset:0;z-index:45;display:none;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
+  background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--acc) 20%,transparent),transparent 60%),var(--bg)}
+#guia.on{display:flex}
+#guia::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--poste,repeating-linear-gradient(135deg,#c0392b 0 10px,#f5f0e6 10px 20px,#1f3a68 20px 30px,#f5f0e6 30px 40px))}
+.gu-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);font-family:var(--cond,inherit);text-transform:uppercase;letter-spacing:.1em}
+.gu-top button{background:none;border:0;color:var(--mut);font:inherit;cursor:pointer;padding:8px 0}
+.gu-body{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:460px;margin:0 auto;width:100%;animation:guEntra .35s ease}
+@keyframes guEntra{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
+.gu-ic{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:44px;color:var(--onacc);
+  background:var(--oro,linear-gradient(135deg,#f0cf86,#c9963f));box-shadow:0 0 0 6px var(--bg),0 0 0 7px color-mix(in srgb,var(--acc) 60%,transparent),0 16px 40px color-mix(in srgb,var(--acc) 40%,transparent)}
+.gu-ic svg{width:46px;height:46px}
+.gu-body h2{font-family:var(--serif,Georgia,serif);font-size:30px;text-align:center;margin:0 0 10px;text-transform:none;letter-spacing:0;color:var(--txt);display:block}
+.gu-body h2::after{display:none}
+.gu-body>p{text-align:center;color:var(--mut);line-height:1.5;margin:0 0 24px;font-size:15.5px}
+.gu-list{display:flex;flex-direction:column;gap:10px}
+.gu-list div{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:14.5px;box-shadow:var(--brillo,none)}
+.gu-list span{width:36px;height:36px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--acc2);
+  background:color-mix(in srgb,var(--acc) 14%,var(--card2));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
+.gu-bot{max-width:460px;margin:0 auto;width:100%}
+.gu-dots{display:flex;justify-content:center;gap:7px;margin:18px 0 14px}
+.gu-dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:width .25s,background .25s}
+.gu-dots i.on{width:26px;background:var(--acc)}
+.gu-bot .btn{padding:15px}
+</style>
+<link rel="stylesheet" href="premium.css?v=28">
 </head>
 <body>
-<header><div class="brand"><img class="logo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
+<header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
 <main id="main"></main>
 <button class="fab" id="fab" data-act="nueva" aria-label="Nueva hora"><span data-ic="plus" style="font-size:28px"></span></button>
 <nav class="tabs">
@@ -230,7 +255,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.5';
+const VERSION_APP='2.8';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -305,6 +330,23 @@ async function initRemote(){
 const serv=id=>S.servicios.find(s=>s.id===id);
 const barb=id=>S.barberos.find(b=>b.id===id);
 function slots(){const out=[],a=toMin(S.config.inicio),b=toMin(S.config.fin),st=+S.config.intervalo||30;for(let t=a;t<b;t+=st)out.push(t);return out}
+function almuerzo(){const d=+S.config.almDur||0;return d?{a:toMin(S.config.almIni||'14:00'),d}:null}
+function enAlmuerzo(t,dur){const al=almuerzo();return!!al&&t<al.a+al.d&&al.a<t+(dur||1)}
+function almHTML(){const c=S.config;return`<div class="grid2"><label>Hora de almuerzo<select data-cfg="almDur">${[[0,'Sin almuerzo'],[30,'30 minutos'],[60,'1 hora'],[90,'1 hora y media'],[120,'2 horas']].map(([v,t])=>`<option value="${v}" ${(+c.almDur||0)===v?'selected':''}>${t}</option>`).join('')}</select></label><label>Desde las<input type="time" data-cfg="almIni" value="${esc(c.almIni||'14:00')}" ${+c.almDur?'':'disabled'}></label></div>`}
+function cargarLogo(file){
+  if(!file)return;if(!/^image\//.test(file.type)){toast('Elige una imagen (PNG, JPG o WebP)');return}
+  if(file.size>8e6){toast('La imagen es muy pesada (máx. 8 MB)');return}
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{
+    const intento=(lado,q)=>{const cv=document.createElement('canvas');cv.width=cv.height=lado;const x=cv.getContext('2d');
+      const k=Math.min(lado/img.width,lado/img.height),w=img.width*k,h=img.height*k;x.imageSmoothingQuality='high';x.drawImage(img,(lado-w)/2,(lado-h)/2,w,h);
+      let d=cv.toDataURL('image/webp',q);if(!/^data:image\/webp/.test(d))d=cv.toDataURL('image/png');return d};
+    let d='';for(const [l,q] of [[192,.86],[160,.8],[128,.75],[112,.65],[96,.6]]){d=intento(l,q);if(d.length<13000)break}
+    URL.revokeObjectURL(url);
+    if(d.length>=13000){toast('No pudimos achicar ese logo. Prueba con otra imagen');return}
+    S.config.logo=d;touch('config');render();toast('¡Logo listo! Ya aparece en tu página de reservas')};
+  img.onerror=()=>{URL.revokeObjectURL(url);toast('No pudimos leer esa imagen')};
+  img.src=url}
 function ocupados(f,bid,excepto){
   const set=new Set(),sl=slots();
   S.citas.forEach(c=>{
@@ -336,6 +378,7 @@ function clientes(){
 let EXTRAS={};fetch('extras.json?x='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{EXTRAS=j||{};if(ui.tab==='ajustes')render();pintarBloqueo()}).catch(()=>{});
 function render(){
   $('#hNombre').textContent=S.config.nombre||'Mi Barbería';
+  $('#hLogo').src=S.config.logo||'icon-192.png';$('#hLogo').classList.toggle('propio',!!S.config.logo);
   document.querySelectorAll('nav.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===ui.tab));
   $('#fab').style.display=(ui.tab==='agenda'||ui.tab==='clientes')?'':'none';
   const m=$('#main');
@@ -368,14 +411,16 @@ function vAgenda(){
   const items=dia.map(c=>({t:toMin(c.hora),c}));
   const ahora=new Date(),minAhora=ahora.getHours()*60+ahora.getMinutes();
   if(f>=hoy()){
+    const al=almuerzo();if(al&&(S.config.dias||[1,2,3,4,5,6]).indexOf(parse(f).getDay())>=0&&!(esHoy&&al.a+al.d<minAhora))items.push({t:al.a,alm:al});
     const occ={};S.barberos.forEach(b=>occ[b.id]=ocupados(f,b.id));
     slots().forEach(t=>{
       if(esHoy&&t<minAhora-(+S.config.intervalo||30))return;
+      if(enAlmuerzo(t,+S.config.intervalo||30))return;
       const libre=bsel?!occ[bsel].has(t):S.barberos.some(b=>!occ[b.id].has(t));
       if(libre)items.push({t,libre:true});
     });
   }
-  items.sort((a,b)=>a.t-b.t||(a.libre?1:0)-(b.libre?1:0));
+  items.sort((a,b)=>a.t-b.t||(a.libre||a.alm?1:0)-(b.libre||b.alm?1:0));
   const activas=dia.filter(c=>c.estado!=='novino');
   const esperado=activas.reduce((s,c)=>s+(+c.precio||0),0);
   const hecho=dia.filter(c=>c.estado==='atendido').reduce((s,c)=>s+(+c.precio||0),0);
@@ -393,7 +438,7 @@ function vAgenda(){
   h+=`<div class="resumen"><div><b>${activas.length}</b><span>horas</span></div><div><b>${clp(esperado)}</b><span>esperado</span></div><div><b>${clp(hecho)}</b><span>cobrado</span></div></div>`;
   if(!S.citas.length)h+=`<div class="vacio"><div class="ico">${ic('scissors')}</div><b>¡Bienvenido a Silla!</b><br>Revisa tus servicios y precios en <b>Ajustes</b>, y después toca una hora libre o el botón <b>+</b> para agendar.</div>`;
   if(!items.length)h+=`<div class="vacio">${f<hoy()?'No hubo horas este día.':'No quedan horas libres en el horario de atención.'}</div>`;
-  h+=items.map(it=>it.libre?`<button class="libre" data-act="nueva" data-hora="${toHH(it.t)}"><span class="h">${toHH(it.t)}</span>Libre<span class="plus">+</span></button>`:citaCard(it.c)).join('');
+  h+=items.map(it=>it.alm?`<div class="almuerzo"><span class="h">${toHH(it.alm.a)}</span>${ic('moon')}<b>Almuerzo</b><small>hasta las ${toHH(it.alm.a+it.alm.d)} · no se puede reservar</small></div>`:it.libre?`<button class="libre" data-act="nueva" data-hora="${toHH(it.t)}"><span class="h">${toHH(it.t)}</span>Libre<span class="plus">+</span></button>`:citaCard(it.c)).join('');
   return h;
 }
 
@@ -444,9 +489,13 @@ function vAjustes(){
   return`<h2>Tu plan</h2><div class="card">${planHTML()}</div><h2>Tu barbería</h2><div class="card">
     <label>Nombre de la barbería<input data-cfg="nombre" value="${esc(c.nombre)}"></label>
     <label>Tu nombre (barbero)<input data-bid="${S.barberos[0].id}" value="${esc(S.barberos[0].nombre==='Barbero 1'?'':S.barberos[0].nombre)}" placeholder="Ej: Matías"></label>
-    <div class="grid2"><label>Abre<input type="time" data-cfg="inicio" value="${esc(c.inicio)}"></label><label>Cierra<input type="time" data-cfg="fin" value="${esc(c.fin)}"></label></div>
+    <div class="grid2"><label>Abre<input type="time" data-cfg="inicio" value="${esc(c.inicio)}"></label><label>Cierra<input type="time" data-cfg="fin" value="${esc(c.fin)}"></label></div>${almHTML()}
     <label>Bloques de agenda<select data-cfg="intervalo">${[15,20,30,60].map(v=>`<option value="${v}" ${+c.intervalo===v?'selected':''}>Cada ${v} minutos</option>`).join('')}</select></label></div>
   <h2>Herramientas</h2><div class="card herr"><div class="herr-ic">$</div><div class="herr-tx"><b>Contador de Bolsillo</b><small>Ganancias, IVA y lo del SII de tu negocio, en simple.</small></div>${EXTRAS.contador?`<a class="btn sm pri" href="${EXTRAS.contador}" target="_blank" rel="noopener">Descargar</a>`:`<span class="tag prueba">Muy pronto</span>`}</div>
+  <h2>Tu marca</h2><div class="card marca">
+    <div class="marca-prev${c.logo?' img':''}">${c.logo?`<img src="${c.logo}" alt="Tu logo">`:esc((c.nombre||'B').trim().charAt(0).toUpperCase())}</div>
+    <div class="marca-tx"><b>Tu logo</b><small>Aparece arriba en tu app y en tu página de reservas. Un PNG con fondo transparente se ve mejor.</small>
+    <div class="row"><label class="btn sm pri" style="margin:0">${ic('plus')}${c.logo?'Cambiar':'Subir logo'}<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" style="display:none"></label>${c.logo?'<button class="btn sm" data-act="quitar-logo">Quitar</button>':''}</div></div></div>
   <h2>Diseño</h2><div class="card"><p class="hint">Elige cómo se ve tu app y tu página de reservas.</p><div class="temas">${Object.entries(window.SILLA_TEMAS||{}).map(([k,t])=>`<button class="tema ${(c.tema||'clasico')===k?'on':''}" data-act="tema" data-v="${k}"><div class="mini" style="background:${t.bg};border:1px solid ${t.line}"><i style="background:${t.acc};width:60%"></i><i style="background:${t.card2}"></i><i style="background:${t.card2};width:75%"></i></div><small>${t.nombre}</small></button>`).join('')}</div></div>
   <h2>Servicios</h2><div class="card"><div class="srow" style="font-size:12px;color:var(--mut)"><span>Nombre</span><span>Precio</span><span>Minutos</span><span></span></div>
     ${S.servicios.map(s=>`<div class="srow"><input data-sid="${s.id}" data-k="nombre" value="${esc(s.nombre)}"><input data-sid="${s.id}" data-k="precio" type="number" inputmode="numeric" min="0" step="500" value="${+s.precio||0}"><select data-sid="${s.id}" data-k="duracion">${durs.map(d=>`<option ${+s.duracion===d?'selected':''}>${d}</option>`).join('')}</select><button class="x" data-act="del-serv" data-id="${s.id}" aria-label="Quitar">×</button></div>`).join('')}
@@ -470,7 +519,7 @@ function vReservas(){
   const mesAct=h0.slice(0,7),delMes=web.filter(x=>x.fecha.slice(0,7)===mesAct).length,plata=web.filter(x=>x.fecha.slice(0,7)===mesAct&&x.estado!=='novino').reduce((t,x)=>t+(+x.precio||0),0);
   const dias=(c.dias||[1,2,3,4,5,6]),txtDias=[1,2,3,4,5,6,0].filter(d=>dias.indexOf(d)>=0).map(d=>DIAS[d]).join(' · ');
   let h=`<div class="rs-hero"><div class="rs-poste"></div>
-    <div class="rs-top"><div class="rs-av">${esc(n.trim().charAt(0).toUpperCase())}</div><div><small>Tu página de reservas</small><b>${esc(n)}</b></div><span class="rs-live"><i></i>En línea</span></div>
+    <div class="rs-top"><div class="rs-av${c.logo?' img':''}">${c.logo?`<img src="${c.logo}" alt="">`:esc(n.trim().charAt(0).toUpperCase())}</div><div><small>Tu página de reservas</small><b>${esc(n)}</b></div><span class="rs-live"><i></i>En línea</span></div>
     <p class="rs-sub">Tus clientes eligen servicio, día y hora libre, y la hora cae sola en tu agenda. Atiendes ${esc(txtDias)} · ${esc(c.inicio||'10:00')} a ${esc(c.fin||'20:00')}.</p>`;
   if(!link)h+=`<p class="hint" style="margin:6px 0 0">Conéctate a internet para generar tu enlace.</p></div>`;
   else h+=`<textarea class="linkta rs-link" readonly aria-label="Tu enlace de reservas">${esc(link)}</textarea>
@@ -488,7 +537,7 @@ function vReservas(){
   h+=`<h2>Próximas reservas por enlace</h2>`+(prox.length?`<div class="card rs-list">${prox.slice(0,6).map(x=>`<div class="rs-it" data-act="ver-dia" data-v="${x.fecha}"><div class="rs-d"><b>${parse(x.fecha).getDate()}</b><small>${parse(x.fecha).toLocaleDateString('es-CL',{month:'short'}).replace('.','')}</small></div><div class="rs-tx"><b>${esc(x.cliente)}</b><small>${esc(x.hora)} · ${esc(x.servicio||'')}</small></div><span>${clp(x.precio)}</span></div>`).join('')}${prox.length>6?`<p class="hint" style="margin:8px 0 0;text-align:center">y ${prox.length-6} más en tu agenda</p>`:''}</div>`:`<div class="card"><p class="hint" style="margin:0;text-align:center">Todavía no hay reservas por enlace. Compártelo en tus redes para llenar la agenda.</p></div>`);
   h+=`<h2>Cómo reciben tus clientes</h2><div class="card">
     <label style="margin-bottom:0">Días de atención</label><div class="dias">${[1,2,3,4,5,6,0].map(d=>`<button data-act="dia-at" data-v="${d}" class="${dias.indexOf(d)>=0?'on':''}">${DIAS[d]}</button>`).join('')}</div>
-    <div class="grid2"><label>Abre<input type="time" data-cfg="inicio" value="${esc(c.inicio)}"></label><label>Cierra<input type="time" data-cfg="fin" value="${esc(c.fin)}"></label></div>
+    <div class="grid2"><label>Abre<input type="time" data-cfg="inicio" value="${esc(c.inicio)}"></label><label>Cierra<input type="time" data-cfg="fin" value="${esc(c.fin)}"></label></div>${almHTML()}
     <label>Pueden reservar hasta<select data-cfg="meses">${[1,2,3,6].map(v=>`<option value="${v}" ${(+c.meses||3)===v?'selected':''}>${v===1?'1 mes':v+' meses'} adelante</option>`).join('')}</select></label>
     <label>Anticipación mínima para reservar<select data-cfg="ant">${[15,30,60,120].map(v=>`<option value="${v}" ${(+c.ant||30)===v?'selected':''}>${v<60?v+' minutos':(v/60)+' hora'+(v>60?'s':'')} antes</option>`).join('')}</select></label>
     <label>Tu WhatsApp (botón de contacto en tu página)<input data-cfg="whatsapp" type="tel" inputmode="tel" placeholder="9 1234 5678" value="${esc(c.whatsapp||'')}"></label>
@@ -553,7 +602,7 @@ async function sincronizar(){
   sincronizando=true;
   try{
     const c=S.config,h0=hoy();
-    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3};
+    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3,al:+c.almDur?[c.almIni||'14:00',+c.almDur]:null,lg:c.logo||''};
     const ocupado=S.citas.filter(x=>x.fecha>=h0&&x.estado!=='novino').map(x=>[x.fecha,x.hora,+x.duracion||30,x.id,(x.cliente||'').split(' ')[0]]);
     const r=await fetch(API,{method:'POST',body:JSON.stringify({accion:'perfil',id:L.id,correo:c.correo||'',perfil,ocupado})});
     const j=await r.json();if(j&&j.codigo&&j.codigo!==L.codigo){L.codigo=j.codigo;saveL();if(ui.tab==='reservas')render()}
@@ -637,7 +686,7 @@ function pintarBloqueo(){
 }
 /* ---------- guía de bienvenida ---------- */
 const GUIA=[
-  {ic:'pole',t:'Bienvenido a Silla',p:'Tu agenda de barbería en el bolsillo. En 1 minuto te mostramos cómo sacarle el jugo.',b:[['cal','Anota y ordena tus horas'],['globe','Tus clientes reservan solos'],['cash','Mira cuánto ganas']]},
+  {ic:'scissors',t:'Bienvenido a Silla',p:'Tu agenda de barbería en el bolsillo. En 1 minuto te mostramos cómo sacarle el jugo.',b:[['cal','Anota y ordena tus horas'],['globe','Tus clientes reservan solos'],['cash','Mira cuánto ganas']]},
   {ic:'cal',t:'Tu agenda',p:'Todo tu día en una pantalla. Cambia de día con las flechas.',b:[['plus','Toca el botón + para anotar una hora'],['wa','Recuérdale al cliente por WhatsApp con un toque'],['check','Marca "Confirmó", "Atendido" o "No vino"']]},
   {ic:'globe',t:'Reservas en línea',p:'El botón dorado del centro es tu página de reservas: lo que más te va a llenar la agenda.',b:[['send','Comparte tu enlace en WhatsApp, Instagram o Facebook'],['cal','Tus clientes eligen día y hora libre en un calendario'],['inbox','La hora cae sola en tu agenda y te avisamos']]},
   {ic:'users',t:'Clientes y caja',p:'Silla guarda a cada cliente y suma lo que vas ganando.',b:[['users','Busca clientes por nombre o teléfono'],['cash','Ve lo ganado hoy, en la semana y en el mes'],['scissors','Edita tus servicios y precios en Ajustes']]},
@@ -647,7 +696,7 @@ let guiaI=0;
 function abrirGuia(){guiaI=0;pintarGuia();$('#guia').classList.add('on')}
 function pintarGuia(){const g=GUIA[guiaI],ult=guiaI===GUIA.length-1;
   $('#guia').innerHTML=`<div class="gu-top"><span>${guiaI+1} de ${GUIA.length}</span>${ult?'':'<button data-act="guia-fin">Saltar</button>'}</div>
-  <div class="gu-body" key="${guiaI}"><div class="gu-ic">${g.ic==='pole'?ic('pole'):ic(g.ic)}</div><h2>${g.t}</h2><p>${g.p}</p>
+  <div class="gu-body" key="${guiaI}"><div class="gu-ic">${ic(g.ic)}</div><h2>${g.t}</h2><p>${g.p}</p>
   <div class="gu-list">${g.b.map(([i,t])=>`<div><span>${ic(i)}</span>${t}</div>`).join('')}</div></div>
   <div class="gu-bot"><div class="gu-dots">${GUIA.map((_,i)=>`<i class="${i===guiaI?'on':''}"></i>`).join('')}</div>
   <div class="row">${guiaI?'<button class="btn" data-act="guia-ant">Atrás</button>':''}<button class="btn pri" data-act="${ult?'guia-fin':'guia-sig'}">${ult?'Empezar':'Siguiente'}</button></div></div>`}
@@ -791,6 +840,7 @@ const A={
   'ya-pague':()=>modal(`<h3>Ya pagué</h3><p>Escribe el <b style="color:var(--txt)">número de operación</b> de tu pago. Lo encuentras en el comprobante de Mercado Pago (en la app: Actividad → tu pago → "N° de operación").</p><input id="pgOp" inputmode="numeric" placeholder="Ej: 91234567890"><div class="row" style="margin-top:12px"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn pri" data-act="enviar-pago">Activar mi plan</button></div>`),
   'enviar-pago':()=>enviarPago(),
   'revisar-cerrar':()=>{cerrar();verificar(true)},
+  'quitar-logo':()=>{delete S.config.logo;touch('config');render();toast('Logo quitado')},
   'guia-sig':()=>{guiaI++;pintarGuia()},
   'guia-ant':()=>{guiaI--;pintarGuia()},
   'guia-fin':()=>cerrarGuia(),
@@ -850,8 +900,9 @@ document.addEventListener('input',e=>{
 });
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.id==='logoFile'){cargarLogo(el.files&&el.files[0]);el.value='';return}
   if(el.classList.contains('pick')){ui.fecha=el.value||hoy();render();return}
-  if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant'||k==='meses')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp')render()}
+  if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant'||k==='meses'||k==='almDur')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp'||k==='almDur')render()}
   else if(el.dataset.sid){const s=serv(el.dataset.sid);if(!s)return;const k=el.dataset.k;s[k]=k==='nombre'?el.value.trim()||s.nombre:Math.max(0,+el.value||0);touch('config');toast('Guardado')}
   else if(el.dataset.bid){const b=barb(el.dataset.bid);if(b&&el.value.trim()){b.nombre=el.value.trim();touch('config');toast('Guardado')}}
 });

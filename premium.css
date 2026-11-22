@@ -150,27 +150,21 @@ nav.tabs button.tab-res.on .t{box-shadow:0 6px 22px color-mix(in srgb,var(--acc)
 .rs-tx{flex:1;min-width:0}.rs-tx b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rs-tx small{color:var(--mut);font-size:12.5px}
 .rs-it>span{font-weight:700;color:var(--acc2);font-size:14px}
 
-/* Guía de bienvenida */
-#guia{position:fixed;inset:0;z-index:40;display:none;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
-  background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--acc) 20%,transparent),transparent 60%),var(--bg)}
-#guia.on{display:flex}
-#guia::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--poste)}
-.gu-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em}
-.gu-top button{background:none;border:0;color:var(--mut);font:inherit;cursor:pointer;padding:8px 0}
-.gu-body{flex:1;display:flex;flex-direction:column;justify-content:center;max-width:460px;margin:0 auto;width:100%;animation:guEntra .35s ease}
-@keyframes guEntra{from{opacity:0;transform:translateX(24px)}to{opacity:1;transform:none}}
-.gu-ic{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 22px;font-size:44px;color:var(--onacc);
-  background:var(--oro);box-shadow:0 0 0 6px var(--bg),0 0 0 7px color-mix(in srgb,var(--acc) 60%,transparent),0 16px 40px color-mix(in srgb,var(--acc) 40%,transparent)}
-.gu-ic svg{width:46px;height:46px}
-.gu-body h2{font-family:var(--serif);font-size:30px;text-align:center;margin:0 0 10px;text-transform:none;letter-spacing:0;color:var(--txt);display:block}
-.gu-body h2::after{display:none}
-.gu-body>p{text-align:center;color:var(--mut);line-height:1.5;margin:0 0 24px;font-size:15.5px}
-.gu-list{display:flex;flex-direction:column;gap:10px}
-.gu-list div{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:14px;background:var(--card);border:1px solid var(--line);font-size:14.5px;box-shadow:var(--brillo)}
-.gu-list span{width:36px;height:36px;flex:none;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;color:var(--acc2);
-  background:color-mix(in srgb,var(--acc) 14%,var(--card2));border:1px solid color-mix(in srgb,var(--acc) 35%,transparent)}
-.gu-bot{max-width:460px;margin:0 auto;width:100%}
-.gu-dots{display:flex;justify-content:center;gap:7px;margin:18px 0 14px}
-.gu-dots i{width:8px;height:8px;border-radius:99px;background:var(--line);transition:width .25s,background .25s}
-.gu-dots i.on{width:26px;background:var(--acc)}
-.gu-bot .btn{padding:15px}
+.almuerzo{display:flex;align-items:center;gap:10px;padding:11px 12px;margin-bottom:8px;border-radius:12px;font-size:14px;
+  background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--acc) 9%,transparent) 0 8px,transparent 8px 16px);border:1px solid color-mix(in srgb,var(--acc) 30%,var(--line))}
+.almuerzo .h{font-variant-numeric:tabular-nums;width:46px;color:var(--acc2)}
+.almuerzo svg{color:var(--acc2)}
+.almuerzo small{margin-left:auto;color:var(--mut);font-size:12px;text-align:right}
+
+/* Logo propio */
+.logo.propio{object-fit:contain;background:var(--card2);padding:3px}
+.rs-av.img,.avatar.img,.marca-prev.img{background:var(--card2)!important;overflow:hidden;padding:5px}
+.rs-av.img img,.avatar.img img,.marca-prev.img img{width:100%;height:100%;object-fit:contain;display:block}
+.marca{display:flex;gap:14px;align-items:center}
+.marca-prev{width:78px;height:78px;flex:none;border-radius:50%;background:var(--oro);color:var(--onacc);display:flex;align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:32px;font-weight:800;box-shadow:0 0 0 3px var(--card),0 0 0 4px var(--acc),0 10px 24px rgba(0,0,0,.3)}
+.marca-tx{flex:1;min-width:0}
+.marca-tx b{display:block;margin-bottom:2px}
+.marca-tx small{display:block;color:var(--mut);font-size:12.5px;line-height:1.4;margin-bottom:10px}
+.marca-tx .row{gap:8px}
+.marca-tx label.btn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}

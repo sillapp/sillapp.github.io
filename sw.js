@@ -1,6 +1,6 @@
 // Silla: guarda la app en el celular para que funcione sin internet.
-const VERSION = 'silla-v9';
-const ARCHIVOS = ['./', './index.html', './reserva.html', './r.html', './temas.js', './premium.css', './extras.json', './manifest.webmanifest',
+const VERSION = 'silla-v12';
+const ARCHIVOS = ['./', './index.html', './reserva.html', './r.html', './temas.js', './premium.css?v=28', './extras.json', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -19,6 +19,15 @@ self.addEventListener('fetch', e => {
     e.respondWith(fetch(req).then(r => {
       const copia = r.clone(); caches.open(VERSION).then(c => c.put(req, copia)); return r;
     }).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match('./index.html'))));
+    return;
+  }
+  // Estilos, scripts y datos propios: primero internet, así nunca quedan desfasados.
+  const url = new URL(req.url);
+  if (url.origin === location.origin && /\.(css|js|json)$/.test(url.pathname)) {
+    e.respondWith(fetch(req).then(r => {
+      if (r && r.ok) { const copia = r.clone(); caches.open(VERSION).then(c => c.put(req, copia)); }
+      return r;
+    }).catch(() => caches.match(req, {ignoreSearch: true})));
     return;
   }
   // Resto (íconos, librería del QR): primero la copia guardada.
