@@ -183,7 +183,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=28">
+<link rel="stylesheet" href="premium.css?v=29">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -255,7 +255,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.8';
+const VERSION_APP='2.9';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -282,7 +282,7 @@ let ui={tab:'agenda',fecha:hoy(),barbero:'todos',rango:'hoy',buscar:''};
 /* ---------- guardado: este equipo + nube (si está disponible) ---------- */
 let remote=null,dirty=new Set(),timer=null,saving=false;
 function setSync(t){$('#hSync').textContent='Silla · '+t}
-function touch(...keys){keys.forEach(k=>dirty.add(k));saveLocal();try{programarSync()}catch(e){}if(remote){clearTimeout(timer);timer=setTimeout(flush,700)}}
+function touch(...keys){keys.forEach(k=>dirty.add(k));saveLocal();try{programarSync()}catch(e){}try{programarRespaldo()}catch(e){}if(remote){clearTimeout(timer);timer=setTimeout(flush,700)}}
 function docBody(k){
   if(k==='config')return{config:S.config,servicios:S.servicios,barberos:S.barberos,v:1};
   const m=k.slice(4);return{citas:S.citas.filter(c=>c.fecha.slice(0,7)===m)};
@@ -505,12 +505,14 @@ function vAjustes(){
     <p class="hint" style="margin-top:6px">Puedes usar: {cliente} {fecha} {hora} {servicio} {barbero} {barberia}. Se abre en WhatsApp con el mensaje listo; tú solo tocas enviar.</p></div>
   <h2>Ayuda</h2><div class="card herr"><div class="herr-ic">?</div><div class="herr-tx"><b>Guía de Silla</b><small>Vuelve a ver cómo funciona la app, paso a paso.</small></div><button class="btn sm" data-act="ver-guia">Ver guía</button></div>
   <h2>Respaldo</h2><div class="card">
+    ${respaldoHTML()}
+    <details class="manual"><summary>Copia manual</summary>
     <p class="hint">Copia tu respaldo y guárdalo en tus notas o mándatelo por WhatsApp. Para recuperarlo, pégalo abajo.</p>
     <button class="btn" data-act="copiar" style="width:100%;margin-bottom:10px">Copiar respaldo</button>
     <textarea id="imp" placeholder="Pega aquí un respaldo para restaurarlo"></textarea>
-    <div class="row"><button class="btn" data-act="importar">Restaurar respaldo</button></div>
+    <div class="row"><button class="btn" data-act="importar">Restaurar respaldo</button></div></details>
     <div class="row" style="margin-top:14px"><button class="btn danger" data-act="borrar-todo">Borrar todas las horas</button></div></div>
-  <p class="sync">Tus datos se guardan en este celular y Silla funciona sin internet. Copia un respaldo de vez en cuando.</p>`;
+  <p class="sync">Tus datos se guardan en este celular, Silla funciona sin internet y se respalda sola en la nube cuando hay conexión.</p>`;
 }
 
 function vReservas(){
@@ -533,6 +535,10 @@ function vReservas(){
     <a class="sbtn tg" href="https://t.me/share/url?url=${u}&text=${encodeURIComponent('Reserva tu hora en '+n)}" target="_blank" rel="noopener">${ic('tg')}Telegram</a>
     <button class="sbtn" data-act="copiar-enlace">${ic('copy')}Copiar</button>
     ${navigator.share?`<button class="sbtn" data-act="compartir">${ic('send')}Más apps</button>`:`<a class="sbtn" href="${esc(link)}" target="_blank" rel="noopener">${ic('link')}Abrir</a>`}</div>
+    <h2>Para tus redes</h2><div class="redes">
+      <button class="rd" data-act="img-historia"><span class="rd-prev h"></span><b>Imagen para historia</b><small>Con tu logo y QR</small></button>
+      <button class="rd" data-act="img-post"><span class="rd-prev"></span><b>Imagen para publicación</b><small>Para tu feed o estado</small></button></div>
+    <button class="btn" data-act="guia-redes" style="width:100%;margin-bottom:6px">${ic('globe')}Cómo ponerlo en cada red</button>
     <h2>Código QR</h2><div class="card rs-qr"><div class="qrwrap"><div id="qr"></div></div><div><b>Para el local y tus historias</b><p class="hint">Imprímelo en el espejo o en la caja, o sácale pantallazo y súbelo a Instagram. Al escanearlo abre tu página de reservas.</p></div></div>`}
   h+=`<h2>Próximas reservas por enlace</h2>`+(prox.length?`<div class="card rs-list">${prox.slice(0,6).map(x=>`<div class="rs-it" data-act="ver-dia" data-v="${x.fecha}"><div class="rs-d"><b>${parse(x.fecha).getDate()}</b><small>${parse(x.fecha).toLocaleDateString('es-CL',{month:'short'}).replace('.','')}</small></div><div class="rs-tx"><b>${esc(x.cliente)}</b><small>${esc(x.hora)} · ${esc(x.servicio||'')}</small></div><span>${clp(x.precio)}</span></div>`).join('')}${prox.length>6?`<p class="hint" style="margin:8px 0 0;text-align:center">y ${prox.length-6} más en tu agenda</p>`:''}</div>`:`<div class="card"><p class="hint" style="margin:0;text-align:center">Todavía no hay reservas por enlace. Compártelo en tus redes para llenar la agenda.</p></div>`);
   h+=`<h2>Cómo reciben tus clientes</h2><div class="card">
@@ -593,6 +599,102 @@ function revisarRetornoPago(){const q=new URLSearchParams(location.search).get('
   if(q==='error'){toast('El pago no se completó. Puedes intentarlo de nuevo');return}
   toast(q==='ok'?'¡Pago recibido! Activando tu plan…':'Tu pago está en revisión, te avisamos al activarse');let n=0;
   const t=setInterval(async()=>{n++;try{await verificar(false)}catch(e){}if(plan().estado==='pagado'||n>8){clearInterval(t);render();pintarBloqueo();if(plan().estado==='pagado')toast('¡Plan activo! Gracias por confiar en Silla')}},5000)}
+/* ---------- respaldo en la nube ---------- */
+let respT=null;
+function programarRespaldo(){if(!S.config.registrado)return;clearTimeout(respT);respT=setTimeout(()=>respaldar(false),20000)}
+async function respaldar(manual){
+  if(!S.config.registrado){if(manual)toast('Completa tu registro primero');return}
+  if(!navigator.onLine){if(manual)toast('Sin internet: se respalda solo cuando vuelva');return}
+  if(!/@/.test(S.config.correo||'')){if(manual)toast('Agrega tu correo para activar el respaldo');return}
+  try{const j=await postAPI({accion:'respaldo',id:L.id,correo:S.config.correo,datos:JSON.stringify(S)});
+    if(j&&j.ok){L.respaldo=Date.now();saveL();if(manual){toast('Respaldo guardado en la nube');render()}}
+    else if(manual)toast(j&&j.error==='sin-registro'?'Tu cuenta aún se está activando, intenta en un rato':'No se pudo respaldar')}
+  catch(e){if(manual)toast('No se pudo respaldar, revisa tu internet')}}
+function hace(t){if(!t)return'todavía no';const m=Math.round((Date.now()-t)/6e4);if(m<1)return'recién';if(m<60)return'hace '+m+' min';const h=Math.round(m/60);if(h<24)return'hace '+h+' h';const d=Math.round(h/24);return'hace '+d+' día'+(d===1?'':'s')}
+function respaldoHTML(){const c=S.config,ok=/@/.test(c.correo||'');
+  return`<div class="resp ${ok?'on':''}"><span>${ic(ok?'check':'inbox')}</span><div><b>${ok?'Respaldo automático activado':'Activa el respaldo automático'}</b>
+    <small>${ok?'Se guarda solo en la nube cada vez que cambias algo. Último: '+hace(L.respaldo)+'.':'Escribe tu correo: con él recuperas tu agenda si cambias o pierdes el celular.'}</small></div></div>
+  ${ok?'':`<label>Tu correo<input data-cfg="correo" type="email" inputmode="email" placeholder="tucorreo@gmail.com" value="${esc(c.correo||'')}"></label>`}
+  <div class="row"><button class="btn" data-act="respaldar">${ic('undo')}Respaldar ahora</button><button class="btn" data-act="recuperar">${ic('inbox')}Recuperar</button></div>`}
+let rec={};
+function abrirRecuperar(){rec={paso:0,correo:S.config.correo||''};pintarRec()}
+function pintarRec(){
+  if(!rec.paso)modal(`<h3>Recuperar mis datos</h3><p>Escribe el correo que usabas en Silla. Te mandaremos un código de 6 números para traer tu agenda, clientes y ajustes a este celular.</p>
+    <label>Tu correo<input id="recCorreo" type="email" inputmode="email" value="${esc(rec.correo)}" placeholder="tucorreo@gmail.com"></label>
+    <div class="row"><button class="btn" data-act="cerrar">Cancelar</button><button class="btn pri" data-act="rec-pin">Enviar código</button></div>`);
+  else modal(`<h3>Revisa tu correo</h3><p>Te enviamos un código a <b style="color:var(--txt)">${esc(rec.correo)}</b>. Si no aparece, mira en Spam o Promociones.</p>
+    <label>Código<input id="recPin" inputmode="numeric" maxlength="6" placeholder="123456" style="font-size:22px;letter-spacing:.3em;text-align:center"></label>
+    <div class="row"><button class="btn" data-act="rec-volver">Otro correo</button><button class="btn pri" data-act="rec-usar">Recuperar</button></div>`)}
+async function pedirPin(){const c=(($('#recCorreo')||{}).value||'').trim().toLowerCase();if(!/@/.test(c)){toast('Escribe tu correo');return}
+  if(!navigator.onLine){toast('Necesitas internet');return}rec.correo=c;toast('Enviando código…');
+  try{const j=await postAPI({accion:'pin',correo:c,app:'Silla'});if(j.ok){rec.paso=1;pintarRec()}else toast(j.error==='sin-respaldo'?'No hay un respaldo de Silla con ese correo':'No se pudo enviar el código')}catch(e){toast('Sin conexión, intenta de nuevo')}}
+async function usarPin(){const p=(($('#recPin')||{}).value||'').replace(/\D/g,'');if(p.length!==6){toast('El código tiene 6 números');return}toast('Recuperando…');
+  try{const j=await postAPI({accion:'recuperar',correo:rec.correo,pin:p,app:'Silla'});
+    if(!j.ok){toast(j.error==='pin'?'Código incorrecto':'El código venció, pide otro');return}
+    let o;try{o=JSON.parse(j.datos)}catch(e){toast('El respaldo está dañado');return}
+    S=normalize(o);S.config.registrado=true;if(!S.config.correo)S.config.correo=rec.correo;
+    L.id=j.id;delete L.estado;delete L.hasta;delete L.codigo;L.respaldo=Date.now();saveL();
+    touch('config',...new Set(S.citas.map(c=>mes(c.fecha))));try{localStorage.setItem('silla_guia','1')}catch(e){}
+    cerrar();aplicarTema&&aplicarTema(S.config.tema||'clasico');render();verificar(true);toast('¡Tu agenda volvió! '+S.citas.length+' horas recuperadas')}
+  catch(e){toast('No se pudo recuperar, revisa tu internet')}}
+
+/* ---------- imagen para redes ---------- */
+function cargarQRLib(){return new Promise((ok,mal)=>{if(window.QRCode)return ok();const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=()=>ok();s.onerror=mal;document.head.appendChild(s)})}
+function qrCanvas(texto,lado){const d=document.createElement('div');new window.QRCode(d,{text:texto,width:lado,height:lado,colorDark:'#000000',colorLight:'#ffffff',correctLevel:window.QRCode.CorrectLevel.M});return d.querySelector('canvas')}
+function cargarImg(src){return new Promise(ok=>{if(!src)return ok(null);const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=src})}
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
+function poste(c,y,W,h){c.save();c.beginPath();c.rect(0,y,W,h);c.clip();const cols=['#c0392b','#f5f0e6','#1f3a68','#f5f0e6'];for(let x=-h*2,i=0;x<W+h*2;x+=22,i++){c.fillStyle=cols[i%4];c.beginPath();c.moveTo(x,y+h);c.lineTo(x+h,y);c.lineTo(x+h+22,y);c.lineTo(x+22,y+h);c.closePath();c.fill()}c.restore()}
+async function imagenRedes(tipo){
+  const link=enlaceReserva();if(!link){toast('Conéctate a internet para generar tu enlace');return}
+  toast('Creando tu imagen…');
+  try{await cargarQRLib()}catch(e){toast('Necesitas internet para crear la imagen');return}
+  try{await document.fonts.ready}catch(e){}
+  const hist=tipo==='historia',W=1080,H=hist?1920:1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  const cs=getComputedStyle(document.documentElement),V=(k,d)=>(cs.getPropertyValue(k)||'').trim()||d;
+  const bg=V('--bg','#0c0b0a'),acc=V('--acc','#d4a24c'),acc2=V('--acc2','#f0cf86'),txt=V('--txt','#f4efe6'),mut=V('--mut','#a59f94'),card=V('--card','#161412');
+  c.fillStyle=bg;c.fillRect(0,0,W,H);
+  let g=c.createRadialGradient(W/2,hist?260:170,0,W/2,hist?260:170,hist?900:700);g.addColorStop(0,acc+'40');g.addColorStop(1,acc+'00');c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.strokeStyle=acc+'12';c.lineWidth=2;for(let x=-H;x<W;x+=34){c.beginPath();c.moveTo(x,H);c.lineTo(x+H,0);c.stroke()}
+  poste(c,0,W,26);poste(c,H-26,W,26);
+  const nombre=S.config.nombre||'Mi Barbería',cy=hist?300:190,R=hist?118:96;
+  const gold=c.createLinearGradient(W/2-R,cy-R,W/2+R,cy+R);gold.addColorStop(0,'#f0cf86');gold.addColorStop(1,'#b8862f');
+  c.fillStyle=gold;c.beginPath();c.arc(W/2,cy,R+10,0,7);c.fill();
+  const logo=await cargarImg(S.config.logo);
+  c.fillStyle=logo?card:gold;c.beginPath();c.arc(W/2,cy,R,0,7);c.fill();
+  if(logo){c.save();c.beginPath();c.arc(W/2,cy,R-8,0,7);c.clip();const k=Math.min((R*2-16)/logo.width,(R*2-16)/logo.height);c.drawImage(logo,W/2-logo.width*k/2,cy-logo.height*k/2,logo.width*k,logo.height*k);c.restore()}
+  else{c.fillStyle='#1a1408';c.font='800 '+(R*1.05)+'px "Playfair Display",Georgia,serif';c.textAlign='center';c.textBaseline='middle';c.fillText(nombre.trim().charAt(0).toUpperCase(),W/2,cy+6)}
+  c.textAlign='center';c.textBaseline='alphabetic';
+  let fs=hist?92:78;c.font='800 '+fs+'px "Playfair Display",Georgia,serif';while(c.measureText(nombre).width>W-140&&fs>44){fs-=4;c.font='800 '+fs+'px "Playfair Display",Georgia,serif'}
+  let y=cy+R+(hist?140:110);c.fillStyle=txt;c.fillText(nombre,W/2,y);
+  y+=hist?74:60;c.fillStyle=acc2;c.font='600 '+(hist?40:34)+'px Oswald,"Arial Narrow",sans-serif';c.fillText('RESERVA TU HORA EN LÍNEA',W/2,y);
+  c.fillStyle=acc;c.fillRect(W/2-70,y+(hist?30:24),140,4);
+  const q=hist?600:480,qx=(W-q)/2,qy=y+(hist?90:64);
+  c.shadowColor='rgba(0,0,0,.45)';c.shadowBlur=40;c.fillStyle='#ffffff';rr(c,qx-34,qy-34,q+68,q+68,36);c.fill();c.shadowBlur=0;
+  c.strokeStyle=acc;c.lineWidth=6;rr(c,qx-34,qy-34,q+68,q+68,36);c.stroke();
+  const qc=qrCanvas(link,q);if(qc)c.drawImage(qc,qx,qy,q,q);
+  y=qy+q+34+(hist?96:74);c.fillStyle=txt;c.font='500 '+(hist?44:36)+'px Inter,system-ui,sans-serif';c.fillText('Escanéalo con la cámara y elige tu hora',W/2,y);
+  y+=hist?72:58;c.fillStyle=acc2;c.font='700 '+(hist?42:34)+'px Inter,system-ui,sans-serif';c.fillText(link.replace(/^https?:\/\//,''),W/2,y);
+  if(hist){y+=150;c.fillStyle=mut;c.font='500 34px Inter,system-ui,sans-serif';c.fillText('Horas libres al instante · Confirmación inmediata',W/2,y)}
+  const blob=await new Promise(ok=>cv.toBlob(ok,'image/png'));if(!blob){toast('No se pudo crear la imagen');return}
+  imgRedes={blob,url:URL.createObjectURL(blob),nombre:'silla-'+(hist?'historia':'publicacion')+'.png'};
+  modal(`<h3>Tu imagen está lista</h3><div class="img-prev ${hist?'h':''}"><img src="${imgRedes.url}" alt="Imagen para redes"></div>
+    <p class="hint" style="margin:10px 0">${hist?'Súbela como historia y ponle el sticker de enlace con tu link.':'Publícala en tu feed o en tu estado de WhatsApp.'}</p>
+    <div class="row"><button class="btn" data-act="img-bajar">${ic('undo')}Guardar</button><button class="btn pri" data-act="img-compartir">${ic('send')}Compartir</button></div>`)}
+let imgRedes=null;
+async function compartirImagen(){if(!imgRedes)return;const f=new File([imgRedes.blob],imgRedes.nombre,{type:'image/png'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:S.config.nombre||'Silla'});return}}catch(e){if(e&&e.name==='AbortError')return}
+  bajarImagen();toast('Imagen guardada: búscala en tu galería o Descargas')}
+function bajarImagen(){if(!imgRedes)return;const a=document.createElement('a');a.href=imgRedes.url;a.download=imgRedes.nombre;document.body.appendChild(a);a.click();a.remove()}
+function guiaRedes(){const link=enlaceReserva();
+  modal(`<h3>Cómo ponerlo en cada red</h3><p>Así tus clientes ven un botón para reservar y no un enlace largo.</p>
+  <div class="gr"><b>${ic('ig')}Instagram · historia</b><ol><li>Copia tu enlace (botón Copiar).</li><li>Sube tu imagen o una foto de un corte y toca el ícono de stickers.</li><li>Elige <b>Enlace</b>, pega y en "Personalizar texto" escribe <b>Reserva tu hora</b>.</li><li>Guárdala en Destacadas para que quede siempre a mano.</li></ol></div>
+  <div class="gr"><b>${ic('ig')}Instagram · perfil</b><ol><li>Ve a tu perfil y toca <b>Editar perfil</b>.</li><li>Entra en <b>Enlaces</b> → <b>Agregar enlace externo</b>.</li><li>Pega tu enlace y de título pon <b>Agenda tu hora</b>.</li></ol></div>
+  <div class="gr"><b>${ic('wa')}WhatsApp</b><ol><li><b>Estado:</b> comparte tu imagen y escribe el enlace en el texto.</li><li><b>WhatsApp Business:</b> Ajustes → Herramientas para la empresa → Perfil → <b>Sitio web</b>: pega tu enlace.</li><li>Ponlo también en tu mensaje de bienvenida automático.</li></ol></div>
+  <div class="gr"><b>${ic('fb')}Facebook</b><ol><li>En tu página toca <b>Editar</b> → <b>Agregar botón</b> → <b>Reservar</b> y pega tu enlace.</li><li>Fija una publicación con tu imagen y el enlace.</li></ol></div>
+  <div class="gr"><b>${ic('globe')}Google Maps</b><ol><li>En tu Perfil de Empresa de Google entra a <b>Editar perfil</b> → <b>Contacto</b>.</li><li>Pega tu enlace en <b>Sitio web</b> o en <b>Enlace para reservas</b>.</li></ol></div>
+  <p class="hint" style="margin:12px 0 8px">Textos que puedes usar:</p>
+  <div class="gr-tx">${['📅 Reserva tu hora','✂️ Agenda aquí','Reserva en 1 minuto 💈'].map(t=>`<button class="chip-tx" data-act="copiar-txt" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
+  <div class="row" style="margin-top:14px">${link?'<button class="btn" data-act="copiar-enlace">'+ic('copy')+'Copiar enlace</button>':''}<button class="btn pri" data-act="cerrar">Listo</button></div>`)}
 function licCodigo(){return L.codigo||''}
 /* ---------- sincronizar con la página de reservas ---------- */
 let syncT=null,sincronizando=false;
@@ -711,8 +813,9 @@ function pedirRegistro(){
   <form id="freg"><label>Tu nombre<input name="nombre" required value="${esc(b.nombre==='Barbero 1'?'':b.nombre||'')}" placeholder="Ej: Matías"></label>
   <label>Nombre de tu barbería<input name="barberia" required value="${esc(S.config.nombre==='Mi Barbería'?'':S.config.nombre)}" placeholder="Ej: Barbería El Corte"></label>
   <label>Tu WhatsApp<input name="whatsapp" type="tel" inputmode="tel" required value="${esc(S.config.whatsapp||'')}" placeholder="9 1234 5678"></label>
-  <label>Tu correo (para avisarte de cada reserva)<input name="correo" type="email" inputmode="email" value="${esc(S.config.correo||'')}" placeholder="tucorreo@gmail.com"></label>
-  <div class="row"><button class="btn pri" type="submit">Empezar</button></div></form>`);
+  <label>Tu correo (avisos de reservas y respaldo de tu agenda)<input name="correo" type="email" inputmode="email" required value="${esc(S.config.correo||'')}" placeholder="tucorreo@gmail.com"></label>
+  <div class="row"><button class="btn pri" type="submit">Empezar</button></div></form>
+  <button class="link-rec" data-act="recuperar">¿Ya usabas Silla en otro celular? <b>Recupera tu agenda</b></button>`);
 }
 
 /* ---------- enlace de reservas y solicitudes ---------- */
@@ -841,6 +944,17 @@ const A={
   'enviar-pago':()=>enviarPago(),
   'revisar-cerrar':()=>{cerrar();verificar(true)},
   'quitar-logo':()=>{delete S.config.logo;touch('config');render();toast('Logo quitado')},
+  respaldar:()=>respaldar(true),
+  recuperar:()=>abrirRecuperar(),
+  'rec-pin':()=>pedirPin(),
+  'rec-usar':()=>usarPin(),
+  'rec-volver':()=>{rec.paso=0;pintarRec()},
+  'img-historia':()=>imagenRedes('historia'),
+  'img-post':()=>imagenRedes('post'),
+  'img-compartir':()=>compartirImagen(),
+  'img-bajar':()=>{bajarImagen();toast('Imagen guardada')},
+  'guia-redes':()=>guiaRedes(),
+  'copiar-txt':el=>{const t=el.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Texto copiado'),()=>toast(t))},
   'guia-sig':()=>{guiaI++;pintarGuia()},
   'guia-ant':()=>{guiaI--;pintarGuia()},
   'guia-fin':()=>cerrarGuia(),
@@ -914,7 +1028,8 @@ window.addEventListener('hashchange',revisarHash);
 window.aplicarTema&&aplicarTema(S.config.tema||'clasico');
 const vioGuia=(()=>{try{return localStorage.getItem('silla_guia')}catch(e){return'1'}})();
 if(!vioGuia&&!location.hash)setTimeout(abrirGuia,300);else if(!S.config.registrado&&!location.hash)setTimeout(pedirRegistro,400);
-if(S.config.registrado)verificar(false);
+if(S.config.registrado){verificar(false);if(!L.respaldo||Date.now()-L.respaldo>432e5)setTimeout(()=>respaldar(false),8000)}
+window.addEventListener('online',()=>{if(S.config.registrado&&(!L.respaldo||Date.now()-L.respaldo>36e5))respaldar(false)});
 setInterval(()=>{if(!document.hidden)pedirNuevas()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){pedirNuevas();if(ui.tab==='agenda')render()}});
 window.addEventListener('online',()=>verificar(false));

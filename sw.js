@@ -1,6 +1,6 @@
 // Silla: guarda la app en el celular para que funcione sin internet.
-const VERSION = 'silla-v12';
-const ARCHIVOS = ['./', './index.html', './reserva.html', './r.html', './temas.js', './premium.css?v=28', './extras.json', './manifest.webmanifest',
+const VERSION = 'silla-v13';
+const ARCHIVOS = ['./', './index.html', './reserva.html', './r.html', './temas.js', './premium.css?v=29', './extras.json', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -21,8 +21,10 @@ self.addEventListener('fetch', e => {
     }).catch(() => caches.match(req, {ignoreSearch: true}).then(r => r || caches.match('./index.html'))));
     return;
   }
-  // Estilos, scripts y datos propios: primero internet, así nunca quedan desfasados.
   const url = new URL(req.url);
+  // Datos en vivo (agenda, plan, reservas): siempre directo a internet, nunca desde la copia guardada.
+  if (url.origin !== location.origin && url.hostname !== 'cdnjs.cloudflare.com') return;
+  // Estilos, scripts y datos propios: primero internet, así nunca quedan desfasados.
   if (url.origin === location.origin && /\.(css|js|json)$/.test(url.pathname)) {
     e.respondWith(fetch(req).then(r => {
       if (r && r.ok) { const copia = r.clone(); caches.open(VERSION).then(c => c.put(req, copia)); }
