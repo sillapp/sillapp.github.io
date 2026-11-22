@@ -183,7 +183,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=29">
+<link rel="stylesheet" href="premium.css?v=30">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -255,7 +255,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='2.9';
+const VERSION_APP='3.0';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -272,7 +272,8 @@ function normalize(o){o=o||{};const d=defaults();
   config:Object.assign({},d.config,o.config||{}),
   servicios:Array.isArray(o.servicios)&&o.servicios.length?o.servicios:d.servicios,
   barberos:Array.isArray(o.barberos)&&o.barberos.length?o.barberos:d.barberos,
-  citas:Array.isArray(o.citas)?o.citas:[]}}
+  citas:Array.isArray(o.citas)?o.citas:[],
+  catalogo:Array.isArray(o.catalogo)?o.catalogo.filter(f=>f&&/^data:image\//.test(f.i||'')).slice(0,12):[]}}
 function loadLocal(){try{const r=localStorage.getItem(KEY);if(r)return normalize(JSON.parse(r))}catch(e){}return defaults()}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 
@@ -535,6 +536,7 @@ function vReservas(){
     <a class="sbtn tg" href="https://t.me/share/url?url=${u}&text=${encodeURIComponent('Reserva tu hora en '+n)}" target="_blank" rel="noopener">${ic('tg')}Telegram</a>
     <button class="sbtn" data-act="copiar-enlace">${ic('copy')}Copiar</button>
     ${navigator.share?`<button class="sbtn" data-act="compartir">${ic('send')}Más apps</button>`:`<a class="sbtn" href="${esc(link)}" target="_blank" rel="noopener">${ic('link')}Abrir</a>`}</div>
+    <h2>Catálogo de cortes</h2>${catalogoHTML()}
     <h2>Para tus redes</h2><div class="redes">
       <button class="rd" data-act="img-historia"><span class="rd-prev h"></span><b>Imagen para historia</b><small>Con tu logo y QR</small></button>
       <button class="rd" data-act="img-post"><span class="rd-prev"></span><b>Imagen para publicación</b><small>Para tu feed o estado</small></button></div>
@@ -695,6 +697,42 @@ function guiaRedes(){const link=enlaceReserva();
   <p class="hint" style="margin:12px 0 8px">Textos que puedes usar:</p>
   <div class="gr-tx">${['📅 Reserva tu hora','✂️ Agenda aquí','Reserva en 1 minuto 💈'].map(t=>`<button class="chip-tx" data-act="copiar-txt" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
   <div class="row" style="margin-top:14px">${link?'<button class="btn" data-act="copiar-enlace">'+ic('copy')+'Copiar enlace</button>':''}<button class="btn pri" data-act="cerrar">Listo</button></div>`)}
+/* ---------- catálogo de cortes ---------- */
+const MAX_FOTOS=12;
+function catalogoHTML(){const L2=S.catalogo||[];
+  return`<p class="hint" style="margin:-2px 0 10px">Sube fotos de tus trabajos. Tus clientes las ven en tu página y pueden elegir el estilo que quieren al reservar.</p>
+  <div class="cat">${L2.map(f=>`<button class="cat-it" data-act="cat-editar" data-v="${f.id}"><img src="${f.i}" alt=""><span><b>${esc(f.n||'Sin nombre')}</b>${f.s?`<small>${esc(f.s)}</small>`:''}</span></button>`).join('')}
+  ${L2.length<MAX_FOTOS?`<label class="cat-add">${ic('plus')}<b>Agregar foto</b><small>${L2.length}/${MAX_FOTOS}</small><input type="file" id="catFile" accept="image/*" style="display:none"></label>`:''}</div>
+  ${L.catPend?'<p class="hint" style="margin:8px 0 0">⏳ Las fotos se suben a tu página cuando haya internet.</p>':''}`}
+function achicarFoto(file){return new Promise((ok,mal)=>{
+  if(!file||!/^image\//.test(file.type))return mal('tipo');if(file.size>15e6)return mal('peso');
+  const url=URL.createObjectURL(file),img=new Image();
+  img.onload=()=>{const lado0=Math.min(img.width,img.height),sx=(img.width-lado0)/2,sy=(img.height-lado0)/2;let d='';
+    for(const [l,q] of [[520,.74],[460,.68],[400,.62],[340,.58]]){const cv=document.createElement('canvas');cv.width=cv.height=l;const x=cv.getContext('2d');x.imageSmoothingQuality='high';x.drawImage(img,sx,sy,lado0,lado0,0,0,l,l);
+      d=cv.toDataURL('image/webp',q);if(!/^data:image\/webp/.test(d))d=cv.toDataURL('image/jpeg',q);if(d.length<52000)break}
+    URL.revokeObjectURL(url);d.length<52000?ok(d):mal('grande')};
+  img.onerror=()=>{URL.revokeObjectURL(url);mal('leer')};img.src=url})}
+async function agregarFotoCat(file){
+  if((S.catalogo||[]).length>=MAX_FOTOS){toast('Máximo '+MAX_FOTOS+' fotos');return}
+  let d;try{d=await achicarFoto(file)}catch(e){toast(e==='tipo'?'Elige una foto':'No pudimos usar esa foto, prueba con otra');return}
+  editarFotoCat({id:'f'+Date.now().toString(36),n:'',s:'',i:d},true)}
+let fotoEd=null;
+function editarFotoCat(f,nueva){fotoEd=Object.assign({},f,{nueva:!!nueva});
+  modal(`<h3>${nueva?'Nueva foto':'Editar foto'}</h3><div class="cat-prev"><img src="${f.i}" alt=""></div>
+  <label>Nombre del corte<input id="catN" maxlength="40" value="${esc(f.n||'')}" placeholder="Ej: Fade bajo, Mullet, Degradado con diseño"></label>
+  <label>Servicio (opcional)<select id="catS"><option value="">— Cualquiera —</option>${S.servicios.map(x=>`<option ${x.nombre===f.s?'selected':''}>${esc(x.nombre)}</option>`).join('')}</select></label>
+  <div class="row">${nueva?'<button class="btn" data-act="cerrar">Cancelar</button>':'<button class="btn danger" data-act="cat-borrar">Borrar</button>'}<button class="btn pri" data-act="cat-guardar">Guardar</button></div>`)}
+function guardarFotoCat(){if(!fotoEd)return;const n=($('#catN').value||'').trim();if(!n){toast('Ponle un nombre al corte');return}
+  const f={id:fotoEd.id,n:n.slice(0,40),s:$('#catS').value||'',i:fotoEd.i};S.catalogo=S.catalogo||[];
+  const k=S.catalogo.findIndex(x=>x.id===f.id);if(k>=0)S.catalogo[k]=f;else S.catalogo.push(f);
+  touch('config');cerrar();render();subirCatalogo(true)}
+function borrarFotoCat(){if(!fotoEd)return;S.catalogo=(S.catalogo||[]).filter(x=>x.id!==fotoEd.id);touch('config');cerrar();render();subirCatalogo(true)}
+let catT=null;
+function subirCatalogo(avisar){L.catPend=true;saveL();clearTimeout(catT);catT=setTimeout(()=>enviarCatalogo(avisar),1500)}
+async function enviarCatalogo(avisar){
+  if(!S.config.registrado||!navigator.onLine)return;
+  try{const j=await postAPI({accion:'catalogo',id:L.id,fotos:JSON.stringify((S.catalogo||[]).map(f=>({n:f.n,s:f.s,i:f.i})))});
+    if(j&&j.ok){L.catPend=false;saveL();if(avisar)toast('Listo, ya aparece en tu página de reservas');sincronizar();if(ui.tab==='reservas')render()}}catch(e){}}
 function licCodigo(){return L.codigo||''}
 /* ---------- sincronizar con la página de reservas ---------- */
 let syncT=null,sincronizando=false;
@@ -704,7 +742,7 @@ async function sincronizar(){
   sincronizando=true;
   try{
     const c=S.config,h0=hoy();
-    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3,al:+c.almDur?[c.almIni||'14:00',+c.almDur]:null,lg:c.logo||''};
+    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3,al:+c.almDur?[c.almIni||'14:00',+c.almDur]:null,lg:c.logo||'',ct:(S.catalogo||[]).length};
     const ocupado=S.citas.filter(x=>x.fecha>=h0&&x.estado!=='novino').map(x=>[x.fecha,x.hora,+x.duracion||30,x.id,(x.cliente||'').split(' ')[0]]);
     const r=await fetch(API,{method:'POST',body:JSON.stringify({accion:'perfil',id:L.id,correo:c.correo||'',perfil,ocupado})});
     const j=await r.json();if(j&&j.codigo&&j.codigo!==L.codigo){L.codigo=j.codigo;saveL();if(ui.tab==='reservas')render()}
@@ -955,6 +993,9 @@ const A={
   'img-bajar':()=>{bajarImagen();toast('Imagen guardada')},
   'guia-redes':()=>guiaRedes(),
   'copiar-txt':el=>{const t=el.dataset.v;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Texto copiado'),()=>toast(t))},
+  'cat-editar':el=>{const f=(S.catalogo||[]).find(x=>x.id===el.dataset.v);if(f)editarFotoCat(f,false)},
+  'cat-guardar':()=>guardarFotoCat(),
+  'cat-borrar':()=>confirmar('¿Borrar esta foto?','Se quita de tu catálogo y de tu página de reservas.','Borrar',borrarFotoCat),
   'guia-sig':()=>{guiaI++;pintarGuia()},
   'guia-ant':()=>{guiaI--;pintarGuia()},
   'guia-fin':()=>cerrarGuia(),
@@ -1015,6 +1056,7 @@ document.addEventListener('input',e=>{
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.id==='logoFile'){cargarLogo(el.files&&el.files[0]);el.value='';return}
+  if(el.id==='catFile'){agregarFotoCat(el.files&&el.files[0]);el.value='';return}
   if(el.classList.contains('pick')){ui.fecha=el.value||hoy();render();return}
   if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant'||k==='meses'||k==='almDur')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp'||k==='almDur')render()}
   else if(el.dataset.sid){const s=serv(el.dataset.sid);if(!s)return;const k=el.dataset.k;s[k]=k==='nombre'?el.value.trim()||s.nombre:Math.max(0,+el.value||0);touch('config');toast('Guardado')}
@@ -1028,8 +1070,8 @@ window.addEventListener('hashchange',revisarHash);
 window.aplicarTema&&aplicarTema(S.config.tema||'clasico');
 const vioGuia=(()=>{try{return localStorage.getItem('silla_guia')}catch(e){return'1'}})();
 if(!vioGuia&&!location.hash)setTimeout(abrirGuia,300);else if(!S.config.registrado&&!location.hash)setTimeout(pedirRegistro,400);
-if(S.config.registrado){verificar(false);if(!L.respaldo||Date.now()-L.respaldo>432e5)setTimeout(()=>respaldar(false),8000)}
-window.addEventListener('online',()=>{if(S.config.registrado&&(!L.respaldo||Date.now()-L.respaldo>36e5))respaldar(false)});
+if(S.config.registrado){verificar(false);if(L.catPend)setTimeout(()=>enviarCatalogo(false),5000);if(!L.respaldo||Date.now()-L.respaldo>432e5)setTimeout(()=>respaldar(false),8000)}
+window.addEventListener('online',()=>{if(L.catPend)enviarCatalogo(false);if(S.config.registrado&&(!L.respaldo||Date.now()-L.respaldo>36e5))respaldar(false)});
 setInterval(()=>{if(!document.hidden)pedirNuevas()},60000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){pedirNuevas();if(ui.tab==='agenda')render()}});
 window.addEventListener('online',()=>verificar(false));

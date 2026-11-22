@@ -99,8 +99,18 @@ input:focus{outline:none;border-color:var(--acc)}
 .dia-sel{font-weight:800;font-size:16px;margin:0 0 10px;scroll-margin-top:16px}
 .hgrupo{margin-bottom:12px}
 .hgrupo small{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:7px}
+
+.estilos{margin:14px 0 4px}
+.est-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.est-h b{font-size:15px}.est-h small{color:var(--mut);font-size:12px}
+.est-l{display:flex;gap:10px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.est{flex:none;width:124px;scroll-snap-align:start;border-radius:16px;overflow:hidden;border:2px solid var(--line);background:var(--card);padding:0;cursor:pointer;color:var(--txt);text-align:left;transition:transform .12s,border-color .12s}
+.est img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.est span{display:block;padding:7px 9px;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.est.on{border-color:var(--acc);box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 40%,transparent);transform:translateY(-2px)}
+.est.on span{background:var(--acc);color:var(--onacc)}
 </style>
-<link rel="stylesheet" href="premium.css?v=29">
+<link rel="stylesheet" href="premium.css?v=30">
 </head>
 <body>
 <div class="wrap" id="app"><div class="skel" style="height:96px"></div><div class="skel"></div><div class="skel"></div><div class="skel"></div></div>
@@ -123,8 +133,8 @@ const CAL='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="c
 const OK='<svg width="64" height="64" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="22" fill="rgba(63,184,113,.15)" stroke="#3fb871" stroke-width="2"/><path d="M14 25l7 7 13-15" stroke="#3fb871" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
 const codigo=new URLSearchParams(location.search).get('b')||(()=>{const p=decodeURIComponent(location.pathname.split('/').filter(Boolean).pop()||'');return /^(r|r\.html|silla|index\.html)$/i.test(p)?'':p})();
-let P=null,ocupado=[],ahora=null,activo=true;
-let sel={s:null,f:null,h:null},cal=null;
+let P=null,ocupado=[],ahora=null,activo=true,FOTOS=[];
+let sel={s:null,f:null,h:null,e:null},cal=null;
 let datos=(()=>{try{return JSON.parse(localStorage.getItem('silla_cliente'))||{}}catch(e){return{}}})();
 let enviando=false,hecho=null,error='';
 
@@ -139,6 +149,7 @@ async function cargar(){
     document.title='Reserva tu hora · '+(P.n||'Barbería');
     if(!activo){pantalla('Reservas en pausa','Por ahora no se puede reservar en línea.'+(P.w?' Escríbele directo a la barbería.':''),true);return}
     render();
+    if(+P.ct>0&&!FOTOS.length)api({accion:'catalogo',b:codigo}).then(c=>{if(c&&c.ok&&Array.isArray(c.fotos)){FOTOS=c.fotos.filter(f=>/^data:image\/(webp|jpeg|png);base64,/.test(f.i||''));if(!hecho)render()}}).catch(()=>{});
   }catch(e){pantalla('Sin conexión','Revisa tu internet e inténtalo de nuevo.')}
 }
 function pantalla(t,p,wa){
@@ -184,6 +195,7 @@ function render(){
   if(sel.s==null&&S.length===1)sel.s=0;
   let h=`<div class="hero"><div class="avatar${P.lg?' img':''}">${P.lg&&/^data:image\/(webp|png|jpeg);base64,/.test(P.lg)?`<img src="${P.lg}" alt="">`:esc((P.n||'B').trim().charAt(0).toUpperCase())}</div><div><h1>${esc(P.n||'Barbería')}</h1><p>${P.b?'Reserva con '+esc(P.b):'Reserva tu hora en un minuto'}</p></div>${P.w?`<a href="https://wa.me/${esc(P.w)}" target="_blank" rel="noopener" aria-label="WhatsApp">${WA}</a>`:''}</div>`;
   h+=`<h2 class="${sel.s!=null?'ok':''}"><span>1</span>Elige el servicio</h2>`+S.map((s,i)=>`<button class="serv ${sel.s===i?'on':''}" data-s="${i}"><div><b>${esc(s[0])}</b><small>${+s[2]||30} min</small></div><span class="p">${clp(s[1])}</span></button>`).join('');
+  if(FOTOS.length)h+=`<div class="estilos"><div class="est-h"><b>¿Qué estilo quieres?</b><small>Opcional · toca una foto</small></div><div class="est-l">${FOTOS.map((f,i)=>`<button class="est ${sel.e===i?'on':''}" data-e="${i}"><img src="${f.i}" alt="${esc(f.n)}" loading="lazy"><span>${esc(f.n)}</span></button>`).join('')}</div></div>`;
   h+=`<h2 class="${sel.f?'ok':''}"><span>2</span>Elige el día</h2>`;
   if(sel.s==null)h+=`<p class="nada">Primero elige un servicio.</p>`;
   else{const pr=primera(sel.s);
@@ -205,7 +217,7 @@ function listo(){return sel.s!=null&&sel.f&&sel.h&&(datos.n||'').trim().length>1
 function barra(){
   $('#bar').style.display='';
   const s=(P.s||[])[sel.s];
-  $('#res').innerHTML=error?`<div class="err">${esc(error)}</div>`:(s&&sel.f&&sel.h?`<b>${esc(s[0])}</b> · ${esc(fechaLarga(sel.f))} · <b>${sel.h}</b>`:'Completa los pasos para reservar');
+  $('#res').innerHTML=error?`<div class="err">${esc(error)}</div>`:(s&&sel.f&&sel.h?`<b>${esc(s[0])}</b>${sel.e!=null&&FOTOS[sel.e]?' · '+esc(FOTOS[sel.e].n):''} · ${esc(fechaLarga(sel.f))} · <b>${sel.h}</b>`:'Completa los pasos para reservar');
   const b=$('#send');b.disabled=!listo()||enviando;b.textContent=enviando?'Reservando…':'Confirmar reserva';
 }
 function renderHecho(){
@@ -215,7 +227,7 @@ function renderHecho(){
   const g=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
   const cal='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(s[0]+' en '+(P.n||'la barbería'))+'&dates='+g(ini)+'/'+g(fin)+'&ctz=America/Santiago';
   $('#app').innerHTML=`<div class="box">${OK}<h1>¡Hora reservada!</h1><p>Te esperamos en ${esc(P.n||'la barbería')}.</p>
-    <div class="det"><div><span>Servicio</span><b>${esc(s[0])}</b></div><div><span>Día</span><b>${esc(fechaLarga(hecho.f))}</b></div><div><span>Hora</span><b>${esc(hecho.h)}</b></div><div><span>Valor</span><b>${clp(s[1])}</b></div></div>
+    <div class="det"><div><span>Servicio</span><b>${esc(s[0])}</b></div>${hecho.e?`<div><span>Estilo</span><b>${esc(hecho.e)}</b></div>`:''}<div><span>Día</span><b>${esc(fechaLarga(hecho.f))}</b></div><div><span>Hora</span><b>${esc(hecho.h)}</b></div><div><span>Valor</span><b>${clp(s[1])}</b></div></div>
     <a class="btn" href="${esc(cal)}" target="_blank" rel="noopener">${CAL}Agregar a mi calendario</a>
     ${P.w?`<a class="btn" href="https://wa.me/${esc(P.w)}?text=${encodeURIComponent('Hola, reservé para el '+fechaLarga(hecho.f)+' a las '+hecho.h+'. ')}" target="_blank" rel="noopener">${WA}¿Necesitas cambiarla? Escríbenos</a>`:''}
     <button class="btn" id="otra">Hacer otra reserva</button></div>`;
@@ -224,8 +236,8 @@ async function confirmar(){
   if(!listo()||enviando)return;
   enviando=true;error='';barra();
   try{
-    const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim()});
-    if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h};try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
+    const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim(),e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:''});
+    if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h,e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:''};try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
     const msg={ocupada:'Esa hora se acaba de tomar. Elige otra.',anticipacion:'Esa hora ya no se puede reservar. Elige una más tarde.',limite:'Ya tienes varias horas reservadas. Escríbele a la barbería.',cerrado:'Las reservas están en pausa.',almuerzo:'Esa hora es de almuerzo. Elige otra.',datos:'Revisa tu nombre y teléfono.'}[j.error]||'No se pudo reservar. Inténtalo de nuevo.';
     error=msg;
     if(j.error==='ocupada'||j.error==='anticipacion'){const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora}sel.h=null}
@@ -235,10 +247,11 @@ async function confirmar(){
 document.addEventListener('click',e=>{
   const t=e.target.closest('button');if(!t)return;
   if(t.id==='send'){confirmar();return}
-  if(t.id==='otra'){hecho=null;sel.h=null;cargar();return}
+  if(t.id==='otra'){hecho=null;sel.h=null;sel.e=null;cargar();return}
   error='';
   if(t.dataset.cal){const d=new Date(cal.y,cal.m+(+t.dataset.cal),1);cal={y:d.getFullYear(),m:d.getMonth()};render();return}
   if(t.dataset.pf){sel.f=t.dataset.pf;sel.h=t.dataset.ph;const d=parse(sel.f);cal={y:d.getFullYear(),m:d.getMonth()};render();setTimeout(()=>{const n=$('#nom');if(n)n.scrollIntoView({behavior:'smooth',block:'center'})},60);return}
+  if(t.dataset.e!=null){const i=+t.dataset.e;sel.e=sel.e===i?null:i;const f=FOTOS[i];if(sel.e!=null&&f&&f.s){const k=(P.s||[]).findIndex(x=>x[0]===f.s);if(k>=0&&k!==sel.s){sel.s=k;sel.h=null}}render();return}
   if(t.dataset.s!=null){sel.s=+t.dataset.s;sel.h=null}
   else if(t.dataset.f){sel.f=t.dataset.f;sel.h=null;render();setTimeout(()=>{const x=document.querySelector('.dia-sel');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})},60);return}
   else if(t.dataset.h){sel.h=t.dataset.h;setTimeout(()=>{const n=$('#nom');if(n&&!n.value)n.scrollIntoView({behavior:'smooth',block:'center'})},50)}

@@ -197,3 +197,14 @@ details.manual summary{cursor:pointer;color:var(--mut);font-size:13.5px;margin-b
 .gr ol b{color:var(--txt)}
 .gr-tx{display:flex;flex-wrap:wrap;gap:8px}
 .chip-tx{padding:8px 12px;border-radius:99px;border:1px dashed color-mix(in srgb,var(--acc) 60%,var(--line));background:none;color:var(--txt);font:inherit;font-size:13.5px;cursor:pointer}
+/* Catálogo de cortes */
+.cat{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cat-it,.cat-add{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card);padding:0;cursor:pointer;color:var(--txt)}
+.cat-it img{width:100%;height:100%;object-fit:cover;display:block}
+.cat-it span{position:absolute;left:0;right:0;bottom:0;padding:16px 7px 6px;background:linear-gradient(transparent,rgba(0,0,0,.82));text-align:left}
+.cat-it b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.cat-it small{display:block;font-size:10.5px;color:#e8d6b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cat-add{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;border:1.5px dashed color-mix(in srgb,var(--acc) 60%,var(--line));color:var(--acc2);margin:0}
+.cat-add svg{font-size:24px}.cat-add b{font-size:12.5px}.cat-add small{font-size:11px;color:var(--mut)}
+.cat-prev{display:flex;justify-content:center;margin-bottom:10px}
+.cat-prev img{width:62%;aspect-ratio:1;object-fit:cover;border-radius:16px;border:2px solid var(--acc)}
