@@ -192,7 +192,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=34">
+<link rel="stylesheet" href="premium.css?v=35">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -264,7 +264,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.4';
+const VERSION_APP='3.5';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -515,6 +515,12 @@ function vAjustes(){
     <textarea data-cfg="mensaje">${esc(c.mensaje)}</textarea>
     <p class="hint" style="margin-top:6px">Puedes usar: {cliente} {fecha} {hora} {servicio} {barbero} {barberia}. Se abre en WhatsApp con el mensaje listo; tú solo tocas enviar.</p></div>
   <h2>Ayuda</h2><div class="card herr"><div class="herr-ic">?</div><div class="herr-tx"><b>Guía de Silla</b><small>Vuelve a ver cómo funciona la app, paso a paso.</small></div><button class="btn sm" data-act="ver-guia">Ver guía</button></div>
+  <h2>Recomienda Silla</h2><div class="card rec-silla"><div class="herr" style="margin:0 0 10px;padding:0;border:0;background:none;box-shadow:none"><div class="herr-ic">💈</div><div class="herr-tx"><b>Comparte Silla con un compañero</b><small>Mándale la app a otro barbero.</small></div></div>
+    <div class="rec-info"><p>📲 <b>Su Silla es nueva y es solo suya:</b> parte de cero, con su propia agenda, sus clientes, su enlace de reservas y <b>sus 30 días gratis</b>.</p>
+    <p>🔒 <b>Nada tuyo se comparte:</b> tus horas, tus clientes y tu suscripción siguen igual en tu celular. Él no ve nada tuyo ni tú lo de él.</p>
+    <p>🔄 <b>Cuando Silla se actualiza</b> no pierdes nada: sigues siendo tú, con tus datos y tu suscripción contando como siempre.</p></div>
+    <div class="row" style="margin-top:10px"><button class="btn wa-btn" data-act="rec-wa">${ic('wa')}WhatsApp</button><button class="btn pri" data-act="rec-compartir">${ic('send')}Compartir</button></div>
+    <button class="btn sm" data-act="rec-copiar" style="width:100%;margin-top:8px">${ic('copy')}Copiar enlace de descarga</button></div>
   <h2>Respaldo</h2><div class="card">
     ${respaldoHTML()}
     <details class="manual"><summary>Copia manual</summary>
@@ -897,6 +903,11 @@ function revisarPub(){if(!pubPendiente())return;const f=hoy();if(L.pubAvisada===
   if(!('Notification' in window)||Notification.permission!=='granted'||!navigator.serviceWorker)return;
   const t=pubTipoHoy();navigator.serviceWorker.ready.then(r=>r.showNotification('📣 Tu publicación de hoy está lista',{body:PUB_TIPOS[t][1]+' '+PUB_TIPOS[t][0]+' · Toca para compartirla',icon:'icon-192.png',badge:'icon-192.png',tag:'silla-pub',data:{url:'./#publicar'}})).catch(()=>{})}
 function registrarSyncPub(){try{navigator.serviceWorker&&navigator.serviceWorker.ready.then(r=>{if(r.periodicSync)r.periodicSync.register('silla-pub',{minInterval:36e5}).catch(()=>{})})}catch(e){}}
+/* ---------- recomendar Silla ---------- */
+function linkDescarga(){return EXTRAS.apk||('https://sillapp.github.io/?invita=1')}
+function textoRecomienda(){const apk=!!EXTRAS.apk;
+  return`💈 Te recomiendo *Silla*, la agenda para barberos: tus clientes reservan solos con tu enlace, recordatorios por WhatsApp y caja del día.\n\n✅ 30 días gratis, con tu propia cuenta.\n\n👉 ${apk?'Descárgala aquí':'Ábrela en Chrome y toca "Instalar app"'}: ${linkDescarga()}`}
+async function copiarTxt(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(x){return false}}}
 /* ---------- catálogo de cortes ---------- */
 const MAX_FOTOS=12;
 function catalogoHTML(){const L2=S.catalogo||[];
@@ -1054,6 +1065,7 @@ const TOUR=[
   {tab:'ajustes',q:'h2:diseño',t:'Diseño',p:'Elige los colores de tu app y de tu página de reservas.'},
   {tab:'ajustes',q:'h2:servicios',t:'Servicios',p:'Tus servicios con precio y duración. Agrega o borra los que quieras.'},
   {tab:'ajustes',q:'h2:herramientas',t:'Herramientas',p:'El Contador de Bolsillo para llevar tus ganancias e impuestos.'},
+  {tab:'ajustes',q:'h2:recomienda',t:'Recomienda Silla',p:'Mándale la app a otro barbero. Su Silla es nueva y solo suya, con sus propios 30 días gratis; lo tuyo no se comparte.'},
   {tab:'ajustes',q:'h2:respaldo',t:'Respaldo',p:'Tu agenda se guarda sola en la nube. Si cambias de celular, la recuperas con un código a tu correo.'},
   {tab:'ajustes',q:'h2:ayuda',t:'¿Necesitas ver esto otra vez?',p:'Toca <b>Ver guía</b> cuando quieras.'},
   {t:'¡Listo! ✂️',p:'Ya conoces Silla. Empieza compartiendo tu enlace de reservas para que te lleguen clientes.'}
@@ -1231,6 +1243,9 @@ const A={
   'img-historia':()=>imagenRedes('historia'),
   'img-post':()=>imagenRedes('post'),
   'horas-libres':()=>horasLibres(),
+  'rec-wa':()=>{copiarTxt(linkDescarga());window.open('https://wa.me/?text='+encodeURIComponent(textoRecomienda()),'_blank')},
+  'rec-compartir':()=>{copiarTxt(linkDescarga());if(navigator.share)navigator.share({title:'Silla · agenda para barberos',text:textoRecomienda()}).catch(()=>{});else{copiarTxt(textoRecomienda());toast('Mensaje copiado: pégalo donde quieras')}},
+  'rec-copiar':()=>copiarTxt(linkDescarga()).then(ok=>toast(ok?'🔗 Enlace de descarga copiado':'No se pudo copiar')),
   'tip-seguir':()=>{const f=tipSig;tipSig=null;cerrar();if(f)f()},
   'pub-abrir':()=>{PUB.i=0;abrirPub()},
   'pub-ver':el=>{PUB.i=0;abrirPub(el.dataset.v)},
