@@ -183,7 +183,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=32">
+<link rel="stylesheet" href="premium.css?v=33">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -255,7 +255,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.2';
+const VERSION_APP='3.3';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -686,9 +686,19 @@ async function imagenRedes(tipo,opt){opt=opt||{};
     <p class="hint" style="margin:10px 0">${hist?'Súbela como historia y ponle el sticker de enlace con tu link.':'Publícala en tu feed o en tu estado de WhatsApp.'}</p>
     <div class="row"><button class="btn" data-act="img-bajar">${ic('undo')}Guardar</button><button class="btn pri" data-act="img-compartir">${ic('send')}Compartir</button></div>`)}
 let imgRedes=null;
-async function compartirImagen(){if(!imgRedes)return;const f=new File([imgRedes.blob],imgRedes.nombre,{type:'image/png'});
+let tipSig=null;
+async function copiarLink(){const link=enlaceReserva();if(!link)return false;try{await navigator.clipboard.writeText(link);return true}catch(e){try{const ta=document.createElement('textarea');ta.value=link;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(x){return false}}}
+async function consejoLink(sig){const link=enlaceReserva();await copiarLink();
+  if(!link||(L.tipIG||0)>=3){if(link)toast('Enlace copiado: pégalo con el sticker 🔗 Enlace');return sig()}
+  tipSig=sig;L.tipIG=(L.tipIG||0)+1;saveL();
+  modal(`<h3>🔗 Para que el enlace se pueda tocar</h3><p class="hint" style="margin:0 0 10px">Instagram no deja que otra app ponga el enlace sola. Ya te lo dejé <b>copiado</b>; en la historia haz esto:</p>
+  <ol class="ig-pasos"><li>Toca el ícono de <b>stickers</b> 🙂 arriba.</li><li>Elige <b>🔗 Enlace</b> y mantén presionado para <b>Pegar</b>.</li><li>Toca <b>Personalizar texto</b> y escribe <b>Reserva tu hora</b>. Pon el sticker sobre el QR.</li></ol>
+  <div class="ig-link">${esc(link.replace(/^https?:\/\//,''))}</div>
+  <button class="btn pri" data-act="tip-seguir" style="width:100%;margin-top:12px">${ic('send')}Entendido, compartir</button>`)}
+async function compartirImagenYa(){if(!imgRedes)return;const f=new File([imgRedes.blob],imgRedes.nombre,{type:'image/png'});
   try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:S.config.nombre||'Silla'});return}}catch(e){if(e&&e.name==='AbortError')return}
-  bajarImagen();toast('Imagen guardada: búscala en tu galería o Descargas')}
+  bajarImagen();toast('Imagen guardada y enlace copiado')}
+function compartirImagen(){if(!imgRedes)return;consejoLink(compartirImagenYa)}
 function bajarImagen(){if(!imgRedes)return;const a=document.createElement('a');a.href=imgRedes.url;a.download=imgRedes.nombre;document.body.appendChild(a);a.click();a.remove()}
 function guiaRedes(){const link=enlaceReserva();
   modal(`<h3>Cómo ponerlo en cada red</h3><p>Así tus clientes ven un botón para reservar y no un enlace largo.</p>
@@ -866,10 +876,10 @@ async function abrirPub(t){const ds=pubDisponibles();PUB.t=t||PUB.t&&ds.indexOf(
   if(t0!==PUB.t||h0!==PUB.h||i0!==PUB.i)return;const pv=document.querySelector('.pub-prev');if(!pv)return;
   if(!b){pv.innerHTML='<div class="pub-cargando">No se pudo crear la imagen</div>';return}
   if(PUB.url)URL.revokeObjectURL(PUB.url);PUB.blob=b;PUB.url=URL.createObjectURL(b);imgRedes={blob:b,url:PUB.url,nombre:'silla-'+t0+'.png'};pv.innerHTML=`<img src="${PUB.url}" alt="Publicación de hoy">`}
-async function compartirPub(){if(!PUB.blob){toast('Espera que termine la imagen');return}const t=textoPub(PUB.t),link=enlaceReserva();
-  try{await navigator.clipboard.writeText(link||t)}catch(e){}
+function compartirPub(){if(!PUB.blob){toast('Espera que termine la imagen');return}consejoLink(compartirPubYa)}
+async function compartirPubYa(){if(!PUB.blob)return;const t=textoPub(PUB.t);
   const f=new File([PUB.blob],'silla-'+PUB.t+'.png',{type:'image/png'});
-  try{if(navigator.canShare&&navigator.canShare({files:[f]})){toast(link?'Enlace copiado: pégalo en el sticker de enlace':'Texto copiado');await navigator.share({files:[f],text:t});marcarPub();return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],text:t});marcarPub();return}}catch(e){if(e&&e.name==='AbortError')return}
   bajarImagen();toast('Imagen guardada y enlace copiado');marcarPub()}
 function marcarPub(){const f=hoy();if(L.pubHecha===f)return;const r=L.pubRacha||{};L.pubRacha={n:(r.u&&r.u>=addDays(f,-3)?r.n||0:0)+1,u:f};L.pubHecha=f;saveL();guardarPubSW();
   if(ui.tab==='agenda'||ui.tab==='reservas')setTimeout(render,50)}
@@ -1172,6 +1182,7 @@ const A={
   'img-historia':()=>imagenRedes('historia'),
   'img-post':()=>imagenRedes('post'),
   'horas-libres':()=>horasLibres(),
+  'tip-seguir':()=>{const f=tipSig;tipSig=null;cerrar();if(f)f()},
   'pub-abrir':()=>{PUB.i=0;abrirPub()},
   'pub-ver':el=>{PUB.i=0;abrirPub(el.dataset.v)},
   'pub-fmt':el=>{PUB.h=el.dataset.v==='1';abrirPub(PUB.t)},
