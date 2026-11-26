@@ -162,6 +162,15 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 #guia{position:fixed;inset:0;z-index:45;display:none;flex-direction:column;padding:calc(16px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
   background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--acc) 20%,transparent),transparent 60%),var(--bg)}
 #guia.on{display:flex}
+#guia.tour{background:none;padding:0;display:none}#guia.tour.on{display:block}#guia.tour::before{display:none}
+.tour-hole{position:fixed;box-shadow:0 0 0 9999px rgba(0,0,0,.78);border:2px solid var(--acc,#d4a24c);transition:all .3s ease;pointer-events:none;animation:tourPulso 1.6s ease-in-out infinite}
+.tour-hole.sin{border:0;animation:none}
+@keyframes tourPulso{50%{border-color:color-mix(in srgb,var(--acc,#d4a24c) 35%,transparent);outline:6px solid color-mix(in srgb,var(--acc,#d4a24c) 25%,transparent)}}
+.tour-tip{position:fixed;background:var(--card,#161412);border:1px solid color-mix(in srgb,var(--acc,#d4a24c) 55%,transparent);border-radius:18px;padding:14px 16px 16px;box-shadow:0 18px 50px rgba(0,0,0,.6);transition:top .3s ease;animation:guEntra .3s ease;max-width:520px;margin:0 auto}
+.tt-top{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.tt-top button{background:none;border:0;color:var(--mut);font:inherit;cursor:pointer;padding:6px 0;text-decoration:underline}
+.tour-tip h3{margin:2px 0 6px;font-family:var(--serif,Georgia,serif);font-size:21px;color:var(--acc2,#f0cf86)}
+.tour-tip p{margin:0 0 12px;color:var(--txt);line-height:1.45;font-size:14.5px}.tour-tip p b{color:var(--acc2,#f0cf86)}
 #guia::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:var(--poste,repeating-linear-gradient(135deg,#c0392b 0 10px,#f5f0e6 10px 20px,#1f3a68 20px 30px,#f5f0e6 30px 40px))}
 .gu-top{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut);font-family:var(--cond,inherit);text-transform:uppercase;letter-spacing:.1em}
 .gu-top button{background:none;border:0;color:var(--mut);font:inherit;cursor:pointer;padding:8px 0}
@@ -183,7 +192,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=33">
+<link rel="stylesheet" href="premium.css?v=34">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -255,7 +264,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.3';
+const VERSION_APP='3.4';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -1015,27 +1024,67 @@ function pintarBloqueo(){
   $('#bloqueoBox').innerHTML=`${ic('pole')}<h2>Silla está en pausa</h2><p>Tu plan venció el ${esc(fechaLarga(p.hasta))}. Tus horas y clientes están guardados; paga tu plan para seguir usándola.</p><div class="card" style="text-align:left">${planHTML()}</div><button class="btn" data-act="copiar" style="width:100%;margin-top:6px">${ic('copy')}Copiar respaldo</button>`;
   el.classList.add('on');
 }
-/* ---------- guía de bienvenida ---------- */
-const GUIA=[
-  {ic:'scissors',t:'Bienvenido a Silla',p:'Tu agenda de barbería en el bolsillo. En 1 minuto te mostramos cómo sacarle el jugo.',b:[['cal','Anota y ordena tus horas'],['globe','Tus clientes reservan solos'],['cash','Mira cuánto ganas']]},
-  {ic:'cal',t:'Tu agenda',p:'Todo tu día en una pantalla. Cambia de día con las flechas.',b:[['plus','Toca el botón + para anotar una hora'],['wa','Recuérdale al cliente por WhatsApp con un toque'],['check','Marca "Confirmó", "Atendido" o "No vino"']]},
-  {ic:'globe',t:'Reservas en línea',p:'El botón dorado del centro es tu página de reservas: lo que más te va a llenar la agenda.',b:[['send','Comparte tu enlace en WhatsApp, Instagram o Facebook'],['cal','Tus clientes eligen día y hora libre en un calendario'],['inbox','La hora cae sola en tu agenda y te avisamos']]},
-  {ic:'users',t:'Clientes y caja',p:'Silla guarda a cada cliente y suma lo que vas ganando.',b:[['users','Busca clientes por nombre o teléfono'],['cash','Ve lo ganado hoy, en la semana y en el mes'],['scissors','Edita tus servicios y precios en Ajustes']]},
-  {ic:'star',t:'30 días gratis',p:'Pruébala sin pagar nada. Después eliges tu plan desde Ajustes, con descuento si pagas varios meses.',b:[['sliders','Cambia colores y diseño en Ajustes'],['copy','Saca un respaldo de vez en cuando'],['star','Pago seguro con Mercado Pago']]}
+/* ---------- guía de bienvenida (recorrido sobre la app) ---------- */
+const TOUR=[
+  {t:'¡Bienvenido a Silla! 💈',p:'Te muestro la app en la pantalla real: qué hace cada pestaña y cada botón. Toca <b>Siguiente</b> o desliza.'},
+  {tab:'agenda',q:'nav [data-v="agenda"]',t:'Agenda',p:'Tu día de trabajo. Aquí ves todas las horas anotadas y las libres.'},
+  {tab:'agenda',q:'.daynav',t:'Cambiar de día',p:'Con las flechas ‹ › pasas al día anterior o al siguiente. Toca el centro para volver a hoy.'},
+  {tab:'agenda',q:'.resumen',t:'Resumen del día',p:'Cuántas horas tienes, cuánto esperas ganar y cuánto llevas cobrado hoy.'},
+  {tab:'agenda',q:'main button.libre',t:'Horas libres',p:'Cada línea "Libre" es un hueco. Tócala para anotar a un cliente a esa hora.'},
+  {tab:'agenda',q:'#fab',t:'Botón +',p:'Anota una hora nueva en cualquier momento: cliente, servicio, día y hora.'},
+  {tab:'agenda',q:'[data-act="horas-libres"]',t:'Compartir horas libres',p:'Arma una imagen con tus horas disponibles de hoy, mañana y pasado para subirla a tus redes.'},
+  {tab:'clientes',q:'nav [data-v="clientes"]',t:'Clientes',p:'Todos tus clientes, con su historial, cuántas veces vinieron y su tarjeta de fidelidad.'},
+  {tab:'clientes',q:'main input',t:'Buscador',p:'Escribe el nombre o el teléfono para encontrar a un cliente al tiro.'},
+  {tab:'reservas',q:'nav [data-v="reservas"]',t:'Reservas en línea',p:'El botón dorado del centro. Es lo que más te va a llenar la agenda: tus clientes reservan solos.'},
+  {tab:'reservas',q:'.rs-hero',t:'Tu página de reservas',p:'Este es tu enlace. Con <b>Compartir</b> lo mandas a donde quieras; Silla siempre te lo deja copiado para pegarlo.'},
+  {tab:'reservas',q:'.rs-stats',t:'Tus números',p:'Cuántas reservas te llegaron por el enlace y cuánto dinero generaron este mes.'},
+  {tab:'reservas',q:'.hl-card',t:'Horas libres para redes',p:'Cuántos cupos te quedan los próximos días. Tócalo para compartirlos como historia o por WhatsApp.'},
+  {tab:'reservas',q:'.pub-cfg',t:'Publicación diaria',p:'Actívala y Silla te prepara una historia cada día (horas libres, un servicio, una foto u oferta) y te avisa a la hora que elijas.'},
+  {tab:'reservas',q:'.rs-share',t:'Compartir en',p:'Un toque para mandar tu enlace por WhatsApp, Instagram, Facebook o Telegram.'},
+  {tab:'reservas',q:'.cat',t:'Catálogo de cortes',p:'Sube fotos de tus trabajos. Tus clientes eligen el estilo que quieren al reservar.'},
+  {tab:'reservas',q:'.redes',t:'Imágenes para tus redes',p:'Historia o publicación con tu logo y tu QR, lista para subir.'},
+  {tab:'reservas',q:'h2:código qr',t:'Código QR',p:'Imprímelo y ponlo en el local o el espejo: lo escanean y reservan.'},
+  {tab:'reservas',q:'h2:cómo reciben',t:'Cómo reciben tus clientes',p:'Días y horario de atención, hora de almuerzo, con cuánta anticipación y hasta cuántos meses pueden reservar.'},
+  {tab:'caja',q:'nav [data-v="caja"]',t:'Caja',p:'Lo que ganaste: hoy, en la semana o en el mes, por servicio.'},
+  {tab:'caja',q:'main .chips',t:'Elige el periodo',p:'Cambia entre Hoy, Semana y Mes.'},
+  {tab:'ajustes',q:'nav [data-v="ajustes"]',t:'Ajustes',p:'Todo lo de tu barbería y tu cuenta.'},
+  {tab:'ajustes',q:'h2:tu plan',t:'Tu plan',p:'Cuántos días gratis te quedan y los planes con descuento. Pagas seguro con Mercado Pago.'},
+  {tab:'ajustes',q:'h2:tu barbería',t:'Tu barbería',p:'Nombre, WhatsApp, horario y hora de almuerzo.'},
+  {tab:'ajustes',q:'h2:tu marca',t:'Tu logo',p:'Sube tu logo para que la app y tu página sean tuyas.'},
+  {tab:'ajustes',q:'h2:diseño',t:'Diseño',p:'Elige los colores de tu app y de tu página de reservas.'},
+  {tab:'ajustes',q:'h2:servicios',t:'Servicios',p:'Tus servicios con precio y duración. Agrega o borra los que quieras.'},
+  {tab:'ajustes',q:'h2:herramientas',t:'Herramientas',p:'El Contador de Bolsillo para llevar tus ganancias e impuestos.'},
+  {tab:'ajustes',q:'h2:respaldo',t:'Respaldo',p:'Tu agenda se guarda sola en la nube. Si cambias de celular, la recuperas con un código a tu correo.'},
+  {tab:'ajustes',q:'h2:ayuda',t:'¿Necesitas ver esto otra vez?',p:'Toca <b>Ver guía</b> cuando quieras.'},
+  {t:'¡Listo! ✂️',p:'Ya conoces Silla. Empieza compartiendo tu enlace de reservas para que te lleguen clientes.'}
 ];
-let guiaI=0;
-function abrirGuia(){guiaI=0;pintarGuia();$('#guia').classList.add('on')}
-function pintarGuia(){const g=GUIA[guiaI],ult=guiaI===GUIA.length-1;
-  $('#guia').innerHTML=`<div class="gu-top"><span>${guiaI+1} de ${GUIA.length}</span>${ult?'':'<button data-act="guia-fin">Saltar</button>'}</div>
-  <div class="gu-body" key="${guiaI}"><div class="gu-ic">${ic(g.ic)}</div><h2>${g.t}</h2><p>${g.p}</p>
-  <div class="gu-list">${g.b.map(([i,t])=>`<div><span>${ic(i)}</span>${t}</div>`).join('')}</div></div>
-  <div class="gu-bot"><div class="gu-dots">${GUIA.map((_,i)=>`<i class="${i===guiaI?'on':''}"></i>`).join('')}</div>
-  <div class="row">${guiaI?'<button class="btn" data-act="guia-ant">Atrás</button>':''}<button class="btn pri" data-act="${ult?'guia-fin':'guia-sig'}">${ult?'Empezar':'Siguiente'}</button></div></div>`}
-function cerrarGuia(){$('#guia').classList.remove('on');try{localStorage.setItem('silla_guia','1')}catch(e){}
+let guiaI=0,tourDir=1;
+function tq(q){if(q.indexOf('h2:')===0){const k=q.slice(3);const h=[...document.querySelectorAll('main h2')].find(x=>x.textContent.trim().toLowerCase().indexOf(k)===0);return h&&h.nextElementSibling}return document.querySelector(q)}
+function abrirGuia(){guiaI=0;tourDir=1;cerrar();$('#guia').className='on tour';pintarGuia()}
+function pintarGuia(){const g=$('#guia');let st=TOUR[guiaI];
+  if(st.tab&&ui.tab!==st.tab){ui.tab=st.tab;render();window.scrollTo(0,0)}
+  let el=st.q?tq(st.q):null;
+  if(st.q&&(!el||!el.getClientRects().length)){const n=guiaI+tourDir;if(n>0&&n<TOUR.length-1){guiaI=n;return pintarGuia()}el=null}
+  const fijo=el&&(el.closest('nav')||el.id==='fab');
+  if(el&&!fijo){const r=el.getBoundingClientRect(),vh=innerHeight;window.scrollTo(0,Math.max(0,scrollY+r.top-(r.height>vh*.45?90:(vh*.38-r.height/2))))}
+  const ult=guiaI===TOUR.length-1;
+  g.innerHTML=`<div class="tour-hole${el?'':' sin'}"></div><div class="tour-tip"><div class="tt-top"><span>${guiaI+1} de ${TOUR.length}</span>${ult?'':'<button data-act="guia-fin">Saltar guía</button>'}</div>
+    <h3>${st.t}</h3><p>${st.p}</p><div class="row">${guiaI?'<button class="btn" data-act="guia-ant">‹ Atrás</button>':''}<button class="btn pri" data-act="${ult?'guia-fin':'guia-sig'}">${ult?'Empezar':'Siguiente ›'}</button></div></div>`;
+  requestAnimationFrame(()=>posTour(el))}
+function posTour(el){const g=$('#guia'),h=g.querySelector('.tour-hole'),t=g.querySelector('.tour-tip');if(!h||!t)return;const vw=innerWidth,vh=innerHeight;
+  if(!el){h.style.cssText='left:50%;top:40%;width:0;height:0';t.style.cssText='left:16px;right:16px;top:50%;transform:translateY(-50%)';return}
+  const r=el.getBoundingClientRect(),pd=6,top=Math.max(8,r.top-pd),bot=Math.min(vh-8,r.bottom+pd),left=Math.max(6,r.left-pd),right=Math.min(vw-6,r.right+pd);
+  h.style.cssText=`left:${left}px;top:${top}px;width:${right-left}px;height:${Math.max(0,bot-top)}px;border-radius:${el.closest('nav')||el.id==='fab'?'18px':'16px'}`;
+  const th=t.offsetHeight||200;let y;
+  if(vh-bot>=th+20)y=bot+12;else if(top>=th+20)y=top-th-12;else y=Math.max(12,vh-th-90);
+  t.style.cssText=`left:14px;right:14px;top:${y}px`}
+function cerrarGuia(){const g=$('#guia');g.classList.remove('on');g.innerHTML='';try{localStorage.setItem('silla_guia','1')}catch(e){}
+  if(ui.tab!=='agenda'){ui.tab='agenda';render()}window.scrollTo(0,0);
   if(!S.config.registrado)setTimeout(pedirRegistro,250)}
+window.addEventListener('resize',()=>{if($('#guia').classList.contains('on'))pintarGuia()});
 (()=>{let x0=null;document.addEventListener('touchstart',e=>{if(e.target.closest&&e.target.closest('#guia'))x0=e.touches[0].clientX},{passive:true});
   document.addEventListener('touchend',e=>{if(x0==null)return;const dx=e.changedTouches[0].clientX-x0;x0=null;if(Math.abs(dx)<50)return;
-    if(dx<0&&guiaI<GUIA.length-1){guiaI++;pintarGuia()}else if(dx>0&&guiaI>0){guiaI--;pintarGuia()}},{passive:true})})();
+    if(dx<0&&guiaI<TOUR.length-1){guiaI++;tourDir=1;pintarGuia()}else if(dx>0&&guiaI>0){guiaI--;tourDir=-1;pintarGuia()}},{passive:true})})();
 function pedirRegistro(){
   const b=S.barberos[0]||{};
   modal(`<h3>Bienvenido a Silla</h3><p>Completa tus datos para empezar tu <b style="color:var(--txt)">prueba gratis de 30 días</b>.</p>
@@ -1204,8 +1253,8 @@ const A={
   'cat-editar':el=>{const f=(S.catalogo||[]).find(x=>x.id===el.dataset.v);if(f)editarFotoCat(f,false)},
   'cat-guardar':()=>guardarFotoCat(),
   'cat-borrar':()=>confirmar('¿Borrar esta foto?','Se quita de tu catálogo y de tu página de reservas.','Borrar',borrarFotoCat),
-  'guia-sig':()=>{guiaI++;pintarGuia()},
-  'guia-ant':()=>{guiaI--;pintarGuia()},
+  'guia-sig':()=>{guiaI++;tourDir=1;pintarGuia()},
+  'guia-ant':()=>{guiaI--;tourDir=-1;pintarGuia()},
   'guia-fin':()=>cerrarGuia(),
   'ver-guia':()=>abrirGuia(),
   'compartir-todo':()=>{if(navigator.share){A.compartir()}else copiarEnlace()},
@@ -1245,6 +1294,8 @@ const A={
 };
 document.addEventListener('click',e=>{
   if(e.target.id==='modal'){cerrar();return}
+  const shr=e.target.closest('.sbtn,[data-act="compartir-todo"],[data-act="hl-wa"],[data-act="pub-wa"]');
+  if(shr&&!shr.matches('[data-act="copiar-enlace"],[data-act="ig"]')&&enlaceReserva()){copiarLink();toast('🔗 Enlace copiado: pégalo donde quieras')}
   const el=e.target.closest('[data-act]');if(!el)return;
   const f=A[el.dataset.act];if(f){if(el.tagName!=='A')e.preventDefault();f(el)}
 });
