@@ -192,7 +192,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=35">
+<link rel="stylesheet" href="premium.css?v=36">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -264,7 +264,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.5';
+const VERSION_APP='3.6';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -519,7 +519,8 @@ function vAjustes(){
     <div class="rec-info"><p>📲 <b>Su Silla es nueva y es solo suya:</b> parte de cero, con su propia agenda, sus clientes, su enlace de reservas y <b>sus 30 días gratis</b>.</p>
     <p>🔒 <b>Nada tuyo se comparte:</b> tus horas, tus clientes y tu suscripción siguen igual en tu celular. Él no ve nada tuyo ni tú lo de él.</p>
     <p>🔄 <b>Cuando Silla se actualiza</b> no pierdes nada: sigues siendo tú, con tus datos y tu suscripción contando como siempre.</p></div>
-    <div class="row" style="margin-top:10px"><button class="btn wa-btn" data-act="rec-wa">${ic('wa')}WhatsApp</button><button class="btn pri" data-act="rec-compartir">${ic('send')}Compartir</button></div>
+    <p class="hint" style="margin:12px 0 8px;text-align:center">¿Qué celular tiene tu compañero?</p>
+    <div class="row"><button class="btn rec-os" data-act="rec-compartir" data-v="android"><span>🤖</span>Android</button><button class="btn rec-os" data-act="rec-compartir" data-v="iphone"><span>🍎</span>iPhone</button></div>
     <button class="btn sm" data-act="rec-copiar" style="width:100%;margin-top:8px">${ic('copy')}Copiar enlace de descarga</button></div>
   <h2>Respaldo</h2><div class="card">
     ${respaldoHTML()}
@@ -905,8 +906,11 @@ function revisarPub(){if(!pubPendiente())return;const f=hoy();if(L.pubAvisada===
 function registrarSyncPub(){try{navigator.serviceWorker&&navigator.serviceWorker.ready.then(r=>{if(r.periodicSync)r.periodicSync.register('silla-pub',{minInterval:36e5}).catch(()=>{})})}catch(e){}}
 /* ---------- recomendar Silla ---------- */
 function linkDescarga(){return EXTRAS.apk||('https://sillapp.github.io/?invita=1')}
-function textoRecomienda(){const apk=!!EXTRAS.apk;
-  return`💈 Te recomiendo *Silla*, la agenda para barberos: tus clientes reservan solos con tu enlace, recordatorios por WhatsApp y caja del día.\n\n✅ 30 días gratis, con tu propia cuenta.\n\n👉 ${apk?'Descárgala aquí':'Ábrela en Chrome y toca "Instalar app"'}: ${linkDescarga()}`}
+function textoRecomienda(os){const apk=!!EXTRAS.apk&&os!=='iphone',url=os==='iphone'?'https://sillapp.github.io/?invita=1':linkDescarga();
+  const pasos=os==='iphone'?`📲 Cómo instalarla en iPhone:\n1. Abre este enlace en *Safari*: ${url}\n2. Toca *Compartir* (el cuadrado con la flecha ⬆️).\n3. Elige *"Agregar a inicio"*. ¡Listo, queda como app!`
+    :apk?`📲 Descárgala aquí: ${url}\n(Si te lo pide, permite instalar apps de este origen.)`
+    :`📲 Cómo instalarla en Android:\n1. Abre este enlace en *Chrome*: ${url}\n2. Toca *"Instalar app"* (o ⋮ → *Instalar app*).\n3. ¡Listo, queda como app!`;
+  return`💈 Te recomiendo *Silla*, la agenda para barberos: tus clientes reservan solos con tu enlace, recordatorios por WhatsApp y caja del día.\n\n✅ 30 días gratis, con tu propia cuenta.\n\n`+pasos}
 async function copiarTxt(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(x){return false}}}
 /* ---------- catálogo de cortes ---------- */
 const MAX_FOTOS=12;
@@ -1243,8 +1247,9 @@ const A={
   'img-historia':()=>imagenRedes('historia'),
   'img-post':()=>imagenRedes('post'),
   'horas-libres':()=>horasLibres(),
-  'rec-wa':()=>{copiarTxt(linkDescarga());window.open('https://wa.me/?text='+encodeURIComponent(textoRecomienda()),'_blank')},
-  'rec-compartir':()=>{copiarTxt(linkDescarga());if(navigator.share)navigator.share({title:'Silla · agenda para barberos',text:textoRecomienda()}).catch(()=>{});else{copiarTxt(textoRecomienda());toast('Mensaje copiado: pégalo donde quieras')}},
+  'rec-compartir':el=>{const os=el.dataset.v,t=textoRecomienda(os);copiarTxt(os==='iphone'?'https://sillapp.github.io/?invita=1':linkDescarga());
+    if(navigator.share)navigator.share({title:'Silla · agenda para barberos',text:t}).catch(e=>{if(!e||e.name!=='AbortError')window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')});
+    else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')},
   'rec-copiar':()=>copiarTxt(linkDescarga()).then(ok=>toast(ok?'🔗 Enlace de descarga copiado':'No se pudo copiar')),
   'tip-seguir':()=>{const f=tipSig;tipSig=null;cerrar();if(f)f()},
   'pub-abrir':()=>{PUB.i=0;abrirPub()},

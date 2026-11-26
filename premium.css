@@ -240,3 +240,4 @@ details.manual summary{cursor:pointer;color:var(--mut);font-size:13.5px;margin-b
 .ig-link{background:var(--bg);border:1px dashed var(--acc);border-radius:12px;padding:10px;text-align:center;font-weight:600;color:var(--acc2);font-size:14px;word-break:break-all}
 
 .rec-info{display:grid;gap:8px}.rec-info p{margin:0;font-size:13.5px;line-height:1.45;color:var(--mut);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:9px 11px}.rec-info b{color:var(--txt)}
+.btn.rec-os{flex-direction:column;gap:2px;padding:12px 6px;font-size:15px}.btn.rec-os span{font-size:26px;line-height:1}
