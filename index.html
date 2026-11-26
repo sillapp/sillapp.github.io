@@ -183,7 +183,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=30">
+<link rel="stylesheet" href="premium.css?v=32">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -255,7 +255,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.0';
+const VERSION_APP='3.2';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -428,8 +428,9 @@ function vAgenda(){
   let h=bannerPlan()+`<div class="daynav"><button class="arrow" data-act="dia" data-v="-1" aria-label="Día anterior">‹</button>
     <div class="mid"><strong>${esc(fechaLarga(f))}</strong><span>${esHoy?'Hoy':'Toca para elegir fecha · '+(f<hoy()?'pasado':'próximo')}</span><input type="date" class="pick" value="${f}" aria-label="Elegir fecha"></div>
     <button class="arrow" data-act="dia" data-v="1" aria-label="Día siguiente">›</button></div>`;
-  if(!esHoy)h+=`<div class="chips"><button class="chip" data-act="dia" data-v="0">Volver a hoy</button></div>`;
-  if(esHoy)h+=resumenHoyHTML();
+  if(!esHoy)h+=`<div class="chips"><button class="chip" data-act="dia" data-v="0">Volver a hoy</button>${f>hoy()?'<button class="chip" data-act="horas-libres">Compartir horas libres</button>':''}</div>`;
+  else h+=`<div class="chips"><button class="chip" data-act="horas-libres">${ic('send')} Compartir horas libres</button></div>`;
+  if(esHoy)h+=pubAvisoHTML()+resumenHoyHTML();
   const dias=S.config.dias||[1,2,3,4,5,6];
   if(dias.indexOf(parse(f).getDay())<0)h+=`<div class="cerrado">${ic('moon')}Día cerrado según tu horario. Igual puedes agendar a mano.</div>`;
   if(S.barberos.length>1){
@@ -528,6 +529,7 @@ function vReservas(){
   else h+=`<textarea class="linkta rs-link" readonly aria-label="Tu enlace de reservas">${esc(link)}</textarea>
     <div class="row"><button class="btn pri" data-act="compartir-todo">${ic('send')}Compartir</button><a class="btn" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none">${ic('eye')}Ver mi página</a></div></div>`;
   h+=`<div class="rs-stats"><div><b>${prox.length}</b><span>próximas por enlace</span></div><div><b>${delMes}</b><span>reservas este mes</span></div><div><b>${clp(plata)}</b><span>generado este mes</span></div></div>`;
+  h+=libresResumenHTML()+`<h2>Publicación diaria</h2>`+pubAjustesHTML();
   if(link){const u=encodeURIComponent(link),msg='Reserva tu hora en '+n+' aquí: ';
     h+=`<h2>Compartir en</h2><div class="share rs-share">
     <a class="sbtn wa" href="https://wa.me/?text=${encodeURIComponent(msg+link)}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a>
@@ -646,9 +648,9 @@ function qrCanvas(texto,lado){const d=document.createElement('div');new window.Q
 function cargarImg(src){return new Promise(ok=>{if(!src)return ok(null);const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=src})}
 function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 function poste(c,y,W,h){c.save();c.beginPath();c.rect(0,y,W,h);c.clip();const cols=['#c0392b','#f5f0e6','#1f3a68','#f5f0e6'];for(let x=-h*2,i=0;x<W+h*2;x+=22,i++){c.fillStyle=cols[i%4];c.beginPath();c.moveTo(x,y+h);c.lineTo(x+h,y);c.lineTo(x+h+22,y);c.lineTo(x+22,y+h);c.closePath();c.fill()}c.restore()}
-async function imagenRedes(tipo){
+async function imagenRedes(tipo,opt){opt=opt||{};
   const link=enlaceReserva();if(!link){toast('Conéctate a internet para generar tu enlace');return}
-  toast('Creando tu imagen…');
+  if(!opt.blob)toast('Creando tu imagen…');
   try{await cargarQRLib()}catch(e){toast('Necesitas internet para crear la imagen');return}
   try{await document.fonts.ready}catch(e){}
   const hist=tipo==='historia',W=1080,H=hist?1920:1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
@@ -679,6 +681,7 @@ async function imagenRedes(tipo){
   if(hist){y+=150;c.fillStyle=mut;c.font='500 34px Inter,system-ui,sans-serif';c.fillText('Horas libres al instante · Confirmación inmediata',W/2,y)}
   const blob=await new Promise(ok=>cv.toBlob(ok,'image/png'));if(!blob){toast('No se pudo crear la imagen');return}
   imgRedes={blob,url:URL.createObjectURL(blob),nombre:'silla-'+(hist?'historia':'publicacion')+'.png'};
+  if(opt.blob)return;
   modal(`<h3>Tu imagen está lista</h3><div class="img-prev ${hist?'h':''}"><img src="${imgRedes.url}" alt="Imagen para redes"></div>
     <p class="hint" style="margin:10px 0">${hist?'Súbela como historia y ponle el sticker de enlace con tu link.':'Publícala en tu feed o en tu estado de WhatsApp.'}</p>
     <div class="row"><button class="btn" data-act="img-bajar">${ic('undo')}Guardar</button><button class="btn pri" data-act="img-compartir">${ic('send')}Compartir</button></div>`)}
@@ -697,6 +700,184 @@ function guiaRedes(){const link=enlaceReserva();
   <p class="hint" style="margin:12px 0 8px">Textos que puedes usar:</p>
   <div class="gr-tx">${['📅 Reserva tu hora','✂️ Agenda aquí','Reserva en 1 minuto 💈'].map(t=>`<button class="chip-tx" data-act="copiar-txt" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>
   <div class="row" style="margin-top:14px">${link?'<button class="btn" data-act="copiar-enlace">'+ic('copy')+'Copiar enlace</button>':''}<button class="btn pri" data-act="cerrar">Listo</button></div>`)}
+/* ---------- horas libres para compartir ---------- */
+function libresDia(f){
+  const dias=S.config.dias||[1,2,3,4,5,6];if(dias.indexOf(parse(f).getDay())<0)return null;
+  const st=+S.config.intervalo||30,esHoy=f===hoy(),ah=new Date(),lim=ah.getHours()*60+ah.getMinutes()+(+S.config.ant||30);
+  const occ={};S.barberos.forEach(b=>occ[b.id]=ocupados(f,b.id));
+  return slots().filter(t=>!(esHoy&&t<lim)&&!enAlmuerzo(t,st)&&S.barberos.some(b=>!occ[b.id].has(t)));
+}
+function diasAbiertos(n){const out=[];let f=hoy();for(let i=0;i<30&&out.length<n;i++,f=addDays(f,1)){const l=libresDia(f);if(l)out.push({f,l})}return out}
+function nomDia(f){const h=hoy();if(f===h)return'Hoy';if(f===addDays(h,1))return'Mañana';if(f===addDays(h,2))return'Pasado mañana';const d=parse(f).toLocaleDateString('es-CL',{weekday:'long'});return d.charAt(0).toUpperCase()+d.slice(1)}
+function fCortaHL(f){return parse(f).toLocaleDateString('es-CL',{weekday:'short',day:'numeric',month:'short'}).replace(/\./g,'')}
+function libresResumenHTML(){
+  const ds=diasAbiertos(3);if(!ds.length)return'';const tot=ds.reduce((t,d)=>t+d.l.length,0);
+  return`<button class="hl-card" data-act="horas-libres"><div class="hl-top"><span class="hl-ic">${ic('send')}</span><div><b>Comparte tus horas libres</b><small>${tot?'Llena los huecos de estos días en tus redes':'Tus próximos días están llenos 🔥'}</small></div></div>
+    <div class="hl-dias">${ds.map(d=>`<div class="${d.l.length?'':'lleno'}"><small>${esc(nomDia(d.f)==='Pasado mañana'?'Pasado':nomDia(d.f))}</small><b>${d.l.length}</b><span>${d.l.length===1?'libre':'libres'}</span></div>`).join('')}</div></button>`}
+let HL={sel:null};
+function horasLibres(){const ds=diasAbiertos(7);if(!ds.length){toast('No tienes días de atención configurados');return}
+  if(!HL.sel||!HL.sel.every(f=>ds.some(d=>d.f===f)))HL.sel=ds.filter(d=>d.l.length).slice(0,3).map(d=>d.f);
+  pintarHL()}
+function pintarHL(){const ds=diasAbiertos(7),sel=ds.filter(d=>HL.sel.indexOf(d.f)>=0);
+  modal(`<h3>Comparte tus horas libres</h3><p class="hint" style="margin:0 0 10px">Elige los días que quieres mostrar. Así tus clientes ven al tiro dónde hay cupo y reservan con tu enlace.</p>
+  <div class="hl-pick">${ds.map(d=>`<button data-act="hl-dia" data-v="${d.f}" class="${HL.sel.indexOf(d.f)>=0?'on':''}${d.l.length?'':' lleno'}"><small>${esc(nomDia(d.f)==='Pasado mañana'?'Pasado':nomDia(d.f))}</small><b>${parse(d.f).getDate()}</b><span>${d.l.length?d.l.length+' libres':'Lleno'}</span></button>`).join('')}</div>
+  <div class="hl-prev">${sel.length?sel.map(d=>`<div class="hl-d"><b>${esc(nomDia(d.f))} <small>${esc(fCortaHL(d.f))}</small></b><div>${d.l.length?d.l.map(t=>`<span>${toHH(t)}</span>`).join(''):'<em>Sin horas libres</em>'}</div></div>`).join(''):'<p class="hint" style="text-align:center;margin:8px 0">Toca uno o más días arriba</p>'}</div>
+  <div class="row" style="margin-top:12px"><button class="btn" data-act="hl-img" data-v="post">${ic('eye')}Imagen post</button><button class="btn" data-act="hl-img" data-v="historia">${ic('ig')}Historia</button></div>
+  <div class="row" style="margin-top:8px"><button class="btn wa-btn" data-act="hl-wa">${ic('wa')}WhatsApp</button><button class="btn" data-act="hl-copiar">${ic('copy')}Copiar texto</button></div>
+  <button class="btn" data-act="cerrar" style="width:100%;margin-top:8px">Cerrar</button>`)}
+function textoLibres(){const n=S.config.nombre||'Mi Barbería',link=enlaceReserva(),ds=diasAbiertos(7).filter(d=>HL.sel.indexOf(d.f)>=0&&d.l.length);
+  if(!ds.length)return'';
+  return`💈 *${n}* · Horas disponibles\n\n`+ds.map(d=>`📅 *${nomDia(d.f)}* (${fCortaHL(d.f)})\n${d.l.map(toHH).join(' · ')}`).join('\n\n')+(link?`\n\n👉 Reserva tu hora aquí: ${link}`:'')+(ds.reduce((t,d)=>t+d.l.length,0)<=8?`\n\n¡Quedan pocos cupos, asegura el tuyo! ✂️`:`\n\n¡Elige la tuya antes que se llene! ✂️`)}
+async function imagenLibres(tipo,opt){opt=opt||{};const fsel=opt.fechas||HL.sel;
+  const ds=diasAbiertos(7).filter(d=>fsel.indexOf(d.f)>=0);if(!ds.length){if(!opt.blob)toast('Elige al menos un día');return null}
+  if(!ds.some(d=>d.l.length)){if(!opt.blob)toast('Esos días están llenos');return null}
+  const link=enlaceReserva();if(!opt.blob)toast('Creando tu imagen…');
+  let qrOk=false;if(link){try{await cargarQRLib();qrOk=true}catch(e){}}
+  try{await document.fonts.ready}catch(e){}
+  const hist=tipo==='historia',W=1080,H=hist?1920:1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  const cs=getComputedStyle(document.documentElement),V=(k,d)=>(cs.getPropertyValue(k)||'').trim()||d;
+  const bg=V('--bg','#0c0b0a'),acc=V('--acc','#d4a24c'),acc2=V('--acc2','#f0cf86'),txt=V('--txt','#f4efe6'),mut=V('--mut','#a59f94'),card=V('--card','#161412'),line=V('--line','#2a2622');
+  c.fillStyle=bg;c.fillRect(0,0,W,H);
+  let g=c.createRadialGradient(W/2,120,0,W/2,120,800);g.addColorStop(0,acc+'38');g.addColorStop(1,acc+'00');c.fillStyle=g;c.fillRect(0,0,W,H);
+  poste(c,0,W,22);poste(c,H-22,W,22);
+  const nombre=S.config.nombre||'Mi Barbería',R=hist?70:56,cy=hist?150:110;
+  const logo=await cargarImg(S.config.logo);
+  const gold=c.createLinearGradient(0,cy-R,0,cy+R);gold.addColorStop(0,'#f0cf86');gold.addColorStop(1,'#b8862f');
+  c.fillStyle=gold;c.beginPath();c.arc(W/2,cy,R+6,0,7);c.fill();c.fillStyle=logo?card:gold;c.beginPath();c.arc(W/2,cy,R,0,7);c.fill();
+  if(logo){c.save();c.beginPath();c.arc(W/2,cy,R-5,0,7);c.clip();const k=Math.min((R*2-10)/logo.width,(R*2-10)/logo.height);c.drawImage(logo,W/2-logo.width*k/2,cy-logo.height*k/2,logo.width*k,logo.height*k);c.restore()}
+  else{c.fillStyle='#1a1408';c.font='800 '+R+'px "Playfair Display",Georgia,serif';c.textAlign='center';c.textBaseline='middle';c.fillText(nombre.trim().charAt(0).toUpperCase(),W/2,cy+4)}
+  c.textAlign='center';c.textBaseline='alphabetic';
+  let fs=hist?70:58;c.font='800 '+fs+'px "Playfair Display",Georgia,serif';while(c.measureText(nombre).width>W-120&&fs>38){fs-=4;c.font='800 '+fs+'px "Playfair Display",Georgia,serif'}
+  let y=cy+R+(hist?90:74);c.fillStyle=txt;c.fillText(nombre,W/2,y);
+  y+=hist?70:56;c.fillStyle=acc2;c.font='600 '+(hist?46:38)+'px Oswald,"Arial Narrow",sans-serif';c.fillText('HORAS DISPONIBLES',W/2,y);
+  c.fillStyle=acc;c.fillRect(W/2-60,y+20,120,4);y+=hist?64:50;
+  const pie=hist?(qrOk?420:220):(qrOk?215:150),zona=H-pie-y-20,nd=ds.length;
+  const cols=5,pw=hist?172:164,ph=hist?74:58,gx=hist?14:12,gy=hist?16:12,hd=hist?78:62,dg=hist?26:16;
+  const maxF=Math.max(1,Math.floor((zona-nd*(hd+16)-(nd-1)*dg)/nd/(ph+gy)));
+  const altoTot=ds.reduce((t,d)=>t+hd+Math.min(maxF,Math.ceil(Math.max(d.l.length,1)/cols))*(ph+gy)+16,0)+(nd-1)*dg;
+  y+=Math.max(0,(zona-altoTot)/2);
+  ds.forEach(d=>{
+    const filas=Math.min(maxF,Math.ceil(Math.max(d.l.length,1)/cols)),alto=hd+filas*(ph+gy)+16;
+    c.fillStyle=card;rr(c,50,y,W-100,alto,28);c.fill();c.strokeStyle=line;c.lineWidth=2;rr(c,50,y,W-100,alto,28);c.stroke();
+    c.textAlign='left';c.fillStyle=txt;c.font='700 '+(hist?42:36)+'px Inter,system-ui,sans-serif';c.fillText(nomDia(d.f),84,y+(hist?56:48));
+    const nw=c.measureText(nomDia(d.f)).width;c.fillStyle=mut;c.font='500 '+(hist?32:28)+'px Inter,system-ui,sans-serif';c.fillText(fCortaHL(d.f),84+nw+16,y+(hist?56:48));
+    c.textAlign='right';c.fillStyle=d.l.length?acc2:mut;c.font='700 '+(hist?30:26)+'px Inter,system-ui,sans-serif';c.fillText(d.l.length?d.l.length+(d.l.length===1?' cupo':' cupos'):'LLENO',W-84,y+(hist?56:48));
+    c.textAlign='center';
+    const cap=filas*cols,lista=d.l.length>cap?d.l.slice(0,cap-1):d.l,x0=(W-(cols*pw+(cols-1)*gx))/2;
+    lista.forEach((t,i)=>{const px=x0+(i%cols)*(pw+gx),py=y+hd+Math.floor(i/cols)*(ph+gy);
+      c.fillStyle=acc+'22';rr(c,px,py,pw,ph,ph/2);c.fill();c.strokeStyle=acc;c.lineWidth=3;rr(c,px,py,pw,ph,ph/2);c.stroke();
+      c.fillStyle=txt;c.font='700 '+(hist?36:30)+'px Inter,system-ui,sans-serif';c.fillText(toHH(t),px+pw/2,py+ph/2+(hist?12:10))});
+    if(d.l.length>cap){const i=cap-1,px=x0+(i%cols)*(pw+gx),py=y+hd+Math.floor(i/cols)*(ph+gy);c.fillStyle=mut;c.font='600 '+(hist?32:28)+'px Inter,system-ui,sans-serif';c.fillText('+'+(d.l.length-cap+1)+' más',px+pw/2,py+ph/2+11)}
+    if(!d.l.length){c.fillStyle=mut;c.font='500 '+(hist?32:28)+'px Inter,system-ui,sans-serif';c.fillText('Sin cupos este día',W/2,y+hd+ph/2+10)}
+    y+=alto+dg});
+  y=H-pie;c.textAlign='center';
+  if(qrOk){const q=hist?220:140,qx=hist?(W-q)/2:90,qy=hist?y:y+16;
+    c.fillStyle='#fff';rr(c,qx-14,qy-14,q+28,q+28,18);c.fill();const qc=qrCanvas(link,q);if(qc)c.drawImage(qc,qx,qy,q,q);
+    if(hist){y=qy+q+70}else{c.textAlign='left';c.fillStyle=txt;c.font='700 40px Inter,system-ui,sans-serif';c.fillText('Reserva tu hora',qx+q+50,qy+60);c.fillStyle=acc2;c.font='600 30px Inter,system-ui,sans-serif';c.fillText(link.replace(/^https?:\/\//,''),qx+q+50,qy+110);c.fillStyle=mut;c.font='500 26px Inter,system-ui,sans-serif';c.fillText('Escanea o toca el enlace',qx+q+50,qy+150)}}
+  if(hist||!qrOk){c.textAlign='center';c.fillStyle=txt;c.font='700 '+(hist?44:38)+'px Inter,system-ui,sans-serif';c.fillText(link?'Reserva en el enlace 👇':'Escríbeme para reservar',W/2,y+(qrOk?0:40));
+    if(link){c.fillStyle=acc2;c.font='600 '+(hist?36:30)+'px Inter,system-ui,sans-serif';c.fillText(link.replace(/^https?:\/\//,''),W/2,y+(qrOk?60:96))}}
+  const blob=await new Promise(ok=>cv.toBlob(ok,'image/png'));if(opt.blob)return blob;if(!blob){toast('No se pudo crear la imagen');return}
+  imgRedes={blob,url:URL.createObjectURL(blob),nombre:'horas-libres-'+(hist?'historia':'post')+'.png'};
+  modal(`<h3>Tus horas libres listas</h3><div class="img-prev ${hist?'h':''}"><img src="${imgRedes.url}" alt="Horas libres"></div>
+    <p class="hint" style="margin:10px 0">${hist?'Súbela como historia y agrégale el sticker de enlace con tu link.':'Publícala en tu feed o en tu estado de WhatsApp.'}</p>
+    <div class="row"><button class="btn" data-act="horas-libres">‹ Volver</button><button class="btn" data-act="img-bajar">${ic('undo')}Guardar</button><button class="btn pri" data-act="img-compartir">${ic('send')}Compartir</button></div>`)}
+/* ---------- publicaciones automáticas ---------- */
+const PUB_TIPOS={libres:['Horas libres','🗓️'],servicio:['Servicio destacado','✂️'],catalogo:['Foto del catálogo','📸'],oferta:['Oferta','🔥'],qr:['Tu QR de reservas','📲']};
+function pubCfg(){const p=S.config.pub||{};return{on:!!p.on,h:p.h||'10:00',d:p.d||(S.config.dias||[1,2,3,4,5,6]).slice(),t:p.t||['libres','servicio','catalogo','oferta','qr'],of:p.of||'',od:p.od||'Solo hoy'}}
+function diaNum(f){return Math.floor(parse(f).getTime()/864e5)}
+function pubFechasLibres(){return diasAbiertos(4).filter(d=>d.l.length).slice(0,2).map(d=>d.f)}
+function pubDisponibles(){const c=pubCfg();return c.t.filter(t=>t==='libres'?pubFechasLibres().length:t==='catalogo'?(S.catalogo||[]).length:t==='oferta'?!!c.of.trim():t==='servicio'?S.servicios.length:t==='qr'?!!enlaceReserva():false)}
+function pubTipoHoy(){const ds=pubDisponibles();if(!ds.length)return'qr';const f=hoy();
+  if(ds.indexOf('libres')>=0&&diaNum(f)%2===0)return'libres';return ds[diaNum(f)%ds.length]}
+function pubPendiente(){const c=pubCfg(),f=hoy();if(!c.on||c.d.indexOf(parse(f).getDay())<0||(L.pubHecha||'')===f)return false;
+  const ah=new Date();return ah.getHours()*60+ah.getMinutes()>=toMin(c.h)}
+function rachaPub(){return(L.pubRacha&&L.pubRacha.u&&(L.pubRacha.u===hoy()||L.pubRacha.u>=addDays(hoy(),-3)))?L.pubRacha.n:0}
+function pubAvisoHTML(){if(!pubPendiente())return'';const t=pubTipoHoy();
+  return`<button class="pub-aviso" data-act="pub-abrir"><span>📣</span><div><b>Tu publicación de hoy está lista</b><small>${esc(PUB_TIPOS[t][1]+' '+PUB_TIPOS[t][0])} · compártela en 2 toques</small></div><i>›</i></button>`}
+function pubAjustesHTML(){const c=pubCfg(),r=rachaPub();
+  return`<div class="card pub-cfg"><div class="pub-sw"><div><b>Publicación diaria</b><small>Silla te prepara una historia cada día y te avisa a la hora que elijas.</small></div>
+    <button class="sw ${c.on?'on':''}" data-act="pub-on" aria-label="Activar publicación diaria"><i></i></button></div>
+    ${c.on?`<div class="grid2"><label>Avisarme a las<input type="time" data-pub="h" value="${esc(c.h)}"></label><label>Racha<div class="pub-racha">${r?'🔥 '+r+' día'+(r===1?'':'s'):'Empieza hoy'}</div></label></div>
+    <label style="margin-bottom:0">Días que publico</label><div class="dias">${[1,2,3,4,5,6,0].map(d=>`<button data-act="pub-dia" data-v="${d}" class="${c.d.indexOf(d)>=0?'on':''}">${DIAS[d]}</button>`).join('')}</div>
+    <label style="margin-bottom:6px">Qué quiero publicar (se van turnando)</label><div class="pub-tipos">${Object.keys(PUB_TIPOS).map(k=>`<button data-act="pub-tipo" data-v="${k}" class="${c.t.indexOf(k)>=0?'on':''}">${PUB_TIPOS[k][1]} ${PUB_TIPOS[k][0]}</button>`).join('')}</div>
+    ${c.t.indexOf('oferta')>=0?`<div class="grid2"><label>Tu oferta<input data-pub="of" maxlength="40" placeholder="Ej: 20% dcto en corte + barba" value="${esc(c.of)}"></label><label>Vigencia<select data-pub="od">${['Solo hoy','Hasta el domingo','Esta semana','Lunes a jueves'].map(v=>`<option ${c.od===v?'selected':''}>${v}</option>`).join('')}</select></label></div>`:''}
+    <p class="hint" style="margin:8px 0 10px">Te llega una notificación${S.config.correo?' y un correo':''} a esa hora. ${!('Notification' in window)||Notification.permission!=='granted'?'Activa las notificaciones para recibir el aviso en el celular.':''}</p>
+    <button class="btn pri" data-act="pub-abrir" style="width:100%">${ic('send')}Ver la publicación de hoy</button>`:''}</div>`}
+let PUB={t:null,h:true,i:0,blob:null,url:''};
+function textoPub(t){const n=S.config.nombre||'Mi Barbería',link=enlaceReserva(),c=pubCfg(),L2=link?'\n👉 Reserva aquí: '+link:'';
+  if(t==='libres'){const fs=pubFechasLibres(),ds=diasAbiertos(4).filter(d=>fs.indexOf(d.f)>=0);return`💈 Horas disponibles en ${n}\n\n`+ds.map(d=>`📅 ${nomDia(d.f)}: ${d.l.slice(0,10).map(toHH).join(' · ')}${d.l.length>10?' y más':''}`).join('\n')+L2}
+  if(t==='servicio'){const sv=pubServicio();return`✂️ ${sv.nombre} · ${clp(sv.precio)}\nEn ${n} te dejamos impecable.`+L2}
+  if(t==='catalogo'){const f=pubFoto();return`📸 ${f.n||'Nuevo trabajo'} en ${n}${f.s?'\n¿Lo quieres? Pide "'+f.s+'".':''}`+L2}
+  if(t==='oferta')return`🔥 ${c.of} · ${c.od}\nEn ${n}. ¡Agenda antes de que se acaben los cupos!`+L2;
+  return`📲 Reserva tu hora en ${n} en 1 minuto, sin escribir ni esperar respuesta.`+L2}
+function pubServicio(){const sv=S.servicios.filter(x=>x.nombre);return sv[(diaNum(hoy())+PUB.i)%Math.max(1,sv.length)]||{nombre:'Corte',precio:0,duracion:30}}
+function pubFoto(){const L2=S.catalogo||[];return L2[(diaNum(hoy())+PUB.i)%Math.max(1,L2.length)]||{}}
+async function lienzoPub(hist){const W=1080,H=hist?1920:1350,cv=document.createElement('canvas');cv.width=W;cv.height=H;const c=cv.getContext('2d');
+  const cs=getComputedStyle(document.documentElement),V=(k,d)=>(cs.getPropertyValue(k)||'').trim()||d;
+  const k={bg:V('--bg','#0c0b0a'),acc:V('--acc','#d4a24c'),acc2:V('--acc2','#f0cf86'),txt:V('--txt','#f4efe6'),mut:V('--mut','#a59f94'),card:V('--card','#161412')};
+  c.fillStyle=k.bg;c.fillRect(0,0,W,H);let g=c.createRadialGradient(W/2,120,0,W/2,120,800);g.addColorStop(0,k.acc+'38');g.addColorStop(1,k.acc+'00');c.fillStyle=g;c.fillRect(0,0,W,H);
+  poste(c,0,W,22);poste(c,H-22,W,22);
+  const nombre=S.config.nombre||'Mi Barbería',R=hist?62:50,cy=hist?140:100,logo=await cargarImg(S.config.logo);
+  const gold=c.createLinearGradient(0,cy-R,0,cy+R);gold.addColorStop(0,'#f0cf86');gold.addColorStop(1,'#b8862f');
+  c.fillStyle=gold;c.beginPath();c.arc(W/2,cy,R+6,0,7);c.fill();c.fillStyle=logo?k.card:gold;c.beginPath();c.arc(W/2,cy,R,0,7);c.fill();
+  if(logo){c.save();c.beginPath();c.arc(W/2,cy,R-5,0,7);c.clip();const q=Math.min((R*2-10)/logo.width,(R*2-10)/logo.height);c.drawImage(logo,W/2-logo.width*q/2,cy-logo.height*q/2,logo.width*q,logo.height*q);c.restore()}
+  else{c.fillStyle='#1a1408';c.font='800 '+R+'px "Playfair Display",Georgia,serif';c.textAlign='center';c.textBaseline='middle';c.fillText(nombre.trim().charAt(0).toUpperCase(),W/2,cy+4)}
+  c.textAlign='center';c.textBaseline='alphabetic';let fs=hist?58:48;c.font='800 '+fs+'px "Playfair Display",Georgia,serif';while(c.measureText(nombre).width>W-120&&fs>34){fs-=4;c.font='800 '+fs+'px "Playfair Display",Georgia,serif'}
+  c.fillStyle=k.txt;c.fillText(nombre,W/2,cy+R+(hist?80:64));
+  return{cv,c,W,H,k,y:cy+R+(hist?110:90)}}
+async function pieQR(o,hist){const{c,W,H,k}=o,link=enlaceReserva();let qr=false;if(link){try{await cargarQRLib();qr=true}catch(e){}}
+  const q=hist?200:130,y=H-(hist?380:200);
+  if(qr){const qx=hist?(W-q)/2:90,qy=hist?y:y+20;c.fillStyle='#fff';rr(c,qx-14,qy-14,q+28,q+28,18);c.fill();const qc=qrCanvas(link,q);if(qc)c.drawImage(qc,qx,qy,q,q);
+    if(hist){c.textAlign='center';c.fillStyle=k.txt;c.font='700 44px Inter,system-ui,sans-serif';c.fillText('Reserva en el enlace 👇',W/2,qy+q+80);c.fillStyle=k.acc2;c.font='600 34px Inter,system-ui,sans-serif';c.fillText(link.replace(/^https?:\/\//,''),W/2,qy+q+134)}
+    else{c.textAlign='left';c.fillStyle=k.txt;c.font='700 40px Inter,system-ui,sans-serif';c.fillText('Reserva tu hora',qx+q+50,qy+50);c.fillStyle=k.acc2;c.font='600 30px Inter,system-ui,sans-serif';c.fillText(link.replace(/^https?:\/\//,''),qx+q+50,qy+98);c.fillStyle=k.mut;c.font='500 26px Inter,system-ui,sans-serif';c.fillText('Escanea o toca el enlace',qx+q+50,qy+136)}}
+  else{c.textAlign='center';c.fillStyle=k.txt;c.font='700 42px Inter,system-ui,sans-serif';c.fillText(S.config.whatsapp?'Reserva por WhatsApp: '+S.config.whatsapp:'Reserva tu hora',W/2,H-(hist?200:110))}
+  return y}
+function txtCentro(c,t,x,y,max,font,lh){const ps=String(t).split(' ');let l='',out=[];ps.forEach(p=>{const n=l?l+' '+p:p;c.font=font;if(c.measureText(n).width>max&&l){out.push(l);l=p}else l=n});if(l)out.push(l);out.forEach((s,i)=>c.fillText(s,x,y+i*lh));return y+out.length*lh}
+async function imagenPub(t,hist){
+  if(t==='libres')return imagenLibres(hist?'historia':'post',{blob:1,fechas:pubFechasLibres()});
+  if(t==='qr'){await imagenRedes(hist?'historia':'post',{blob:1});return imgRedes&&imgRedes.blob}
+  const o=await lienzoPub(hist),{c,W,H,k}=o;let y=o.y;const fin=await pieQR(o,hist)-40;c.textAlign='center';
+  if(t==='servicio'){const sv=pubServicio();
+    c.fillStyle=k.acc2;c.font='600 '+(hist?42:34)+'px Oswald,"Arial Narrow",sans-serif';c.fillText('SERVICIO DESTACADO',W/2,y+(hist?40:26));
+    const cy=(y+fin)/2,R=hist?300:220;c.fillStyle=k.card;c.beginPath();c.arc(W/2,cy,R,0,7);c.fill();c.strokeStyle=k.acc;c.lineWidth=8;c.beginPath();c.arc(W/2,cy,R,0,7);c.stroke();
+    c.strokeStyle=k.acc+'55';c.lineWidth=3;c.beginPath();c.arc(W/2,cy,R-24,0,7);c.stroke();
+    c.fillStyle=k.txt;let yy=txtCentro(c,sv.nombre,W/2,cy-(hist?60:44),R*1.6,'800 '+(hist?76:58)+'px "Playfair Display",Georgia,serif',hist?84:64);
+    c.fillStyle=k.acc2;c.font='800 '+(hist?96:72)+'px Inter,system-ui,sans-serif';c.fillText(clp(sv.precio),W/2,yy+(hist?60:44));
+    c.fillStyle=k.mut;c.font='500 '+(hist?36:28)+'px Inter,system-ui,sans-serif';c.fillText((+sv.duracion||30)+' minutos',W/2,yy+(hist?120:90))}
+  else if(t==='catalogo'){const f=pubFoto(),img=await cargarImg(f.i),top=y+(hist?20:10),lado=Math.min(W-160,fin-top-(hist?140:110));
+    if(img){const x=(W-lado)/2;c.save();rr(c,x,top,lado,lado,36);c.clip();const q=Math.max(lado/img.width,lado/img.height);c.drawImage(img,x+(lado-img.width*q)/2,top+(lado-img.height*q)/2,img.width*q,img.height*q);c.restore();c.strokeStyle=k.acc;c.lineWidth=6;rr(c,x,top,lado,lado,36);c.stroke()}
+    c.fillStyle=k.txt;c.font='800 '+(hist?62:48)+'px "Playfair Display",Georgia,serif';c.fillText(f.n||'Nuevo trabajo',W/2,top+lado+(hist?80:62));
+    if(f.s){c.fillStyle=k.acc2;c.font='600 '+(hist?36:28)+'px Inter,system-ui,sans-serif';c.fillText('Pide: '+f.s,W/2,top+lado+(hist?130:102))}}
+  else if(t==='oferta'){const cf=pubCfg(),cy=(y+fin)/2;
+    c.save();c.translate(W/2,cy-(hist?240:180));c.rotate(-0.05);c.fillStyle=k.acc;rr(c,-300,-60,600,120,60);c.fill();c.fillStyle='#1a1408';c.font='800 '+(hist?62:52)+'px Oswald,"Arial Narrow",sans-serif';c.fillText('🔥 OFERTA',0,(hist?22:18));c.restore();
+    c.fillStyle=k.txt;const yy=txtCentro(c,cf.of,W/2,cy-(hist?40:10),W-160,'800 '+(hist?96:72)+'px "Playfair Display",Georgia,serif',hist?108:82);
+    c.fillStyle=k.acc2;c.font='700 '+(hist?44:34)+'px Inter,system-ui,sans-serif';c.fillText(cf.od.toUpperCase(),W/2,yy+(hist?50:36));
+    c.fillStyle=k.mut;c.font='500 '+(hist?34:28)+'px Inter,system-ui,sans-serif';c.fillText('Cupos limitados · Reserva en línea',W/2,yy+(hist?110:84))}
+  return await new Promise(ok=>o.cv.toBlob(ok,'image/png'))}
+async function abrirPub(t){const ds=pubDisponibles();PUB.t=t||PUB.t&&ds.indexOf(PUB.t)>=0&&PUB.t||pubTipoHoy();
+  modal(`<h3>📣 Publicación de hoy</h3><div class="pub-chips">${Object.keys(PUB_TIPOS).filter(k=>ds.indexOf(k)>=0||k==='qr').map(k=>`<button data-act="pub-ver" data-v="${k}" class="${PUB.t===k?'on':''}">${PUB_TIPOS[k][1]} ${PUB_TIPOS[k][0]}</button>`).join('')}</div>
+    <div class="pub-fmt"><button data-act="pub-fmt" data-v="1" class="${PUB.h?'on':''}">Historia</button><button data-act="pub-fmt" data-v="0" class="${PUB.h?'':'on'}">Publicación</button></div>
+    <div class="img-prev ${PUB.h?'h':''} pub-prev"><div class="pub-cargando">Preparando…</div></div>
+    <div class="pub-txt"><small>Texto para acompañar</small><p>${esc(textoPub(PUB.t)).replace(/\n/g,'<br>')}</p></div>
+    <div class="row"><button class="btn pri" data-act="pub-compartir">${ic('send')}Compartir</button><button class="btn wa-btn" data-act="pub-wa">${ic('wa')}WhatsApp</button></div>
+    <div class="row" style="margin-top:8px">${(PUB.t==='servicio'&&S.servicios.length>1)||(PUB.t==='catalogo'&&(S.catalogo||[]).length>1)?`<button class="btn" data-act="pub-otra">${ic('undo')}Otra</button>`:''}<button class="btn" data-act="img-bajar">Guardar</button><button class="btn" data-act="pub-hecha">${ic('check')}Ya la publiqué</button></div>`);
+  try{const on=document.querySelector('.pub-chips .on');on&&on.scrollIntoView({inline:'center',block:'nearest'})}catch(e){}
+  const t0=PUB.t,h0=PUB.h,i0=PUB.i;let b=null;try{b=await imagenPub(t0,h0)}catch(e){}
+  if(t0!==PUB.t||h0!==PUB.h||i0!==PUB.i)return;const pv=document.querySelector('.pub-prev');if(!pv)return;
+  if(!b){pv.innerHTML='<div class="pub-cargando">No se pudo crear la imagen</div>';return}
+  if(PUB.url)URL.revokeObjectURL(PUB.url);PUB.blob=b;PUB.url=URL.createObjectURL(b);imgRedes={blob:b,url:PUB.url,nombre:'silla-'+t0+'.png'};pv.innerHTML=`<img src="${PUB.url}" alt="Publicación de hoy">`}
+async function compartirPub(){if(!PUB.blob){toast('Espera que termine la imagen');return}const t=textoPub(PUB.t),link=enlaceReserva();
+  try{await navigator.clipboard.writeText(link||t)}catch(e){}
+  const f=new File([PUB.blob],'silla-'+PUB.t+'.png',{type:'image/png'});
+  try{if(navigator.canShare&&navigator.canShare({files:[f]})){toast(link?'Enlace copiado: pégalo en el sticker de enlace':'Texto copiado');await navigator.share({files:[f],text:t});marcarPub();return}}catch(e){if(e&&e.name==='AbortError')return}
+  bajarImagen();toast('Imagen guardada y enlace copiado');marcarPub()}
+function marcarPub(){const f=hoy();if(L.pubHecha===f)return;const r=L.pubRacha||{};L.pubRacha={n:(r.u&&r.u>=addDays(f,-3)?r.n||0:0)+1,u:f};L.pubHecha=f;saveL();guardarPubSW();
+  if(ui.tab==='agenda'||ui.tab==='reservas')setTimeout(render,50)}
+function guardarPubSW(){try{if(!('caches' in window))return;const c=pubCfg();caches.open('silla-pub').then(k=>k.put('./__pub',new Response(JSON.stringify({on:c.on,h:c.h,d:c.d,hecha:L.pubHecha||'',avisada:L.pubAvisada||'',n:S.config.nombre||''}),{headers:{'content-type':'application/json'}})))}catch(e){}}
+function revisarPub(){if(!pubPendiente())return;const f=hoy();if(L.pubAvisada===f)return;L.pubAvisada=f;saveL();guardarPubSW();
+  if(!('Notification' in window)||Notification.permission!=='granted'||!navigator.serviceWorker)return;
+  const t=pubTipoHoy();navigator.serviceWorker.ready.then(r=>r.showNotification('📣 Tu publicación de hoy está lista',{body:PUB_TIPOS[t][1]+' '+PUB_TIPOS[t][0]+' · Toca para compartirla',icon:'icon-192.png',badge:'icon-192.png',tag:'silla-pub',data:{url:'./#publicar'}})).catch(()=>{})}
+function registrarSyncPub(){try{navigator.serviceWorker&&navigator.serviceWorker.ready.then(r=>{if(r.periodicSync)r.periodicSync.register('silla-pub',{minInterval:36e5}).catch(()=>{})})}catch(e){}}
 /* ---------- catálogo de cortes ---------- */
 const MAX_FOTOS=12;
 function catalogoHTML(){const L2=S.catalogo||[];
@@ -742,7 +923,7 @@ async function sincronizar(){
   sincronizando=true;
   try{
     const c=S.config,h0=hoy();
-    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3,al:+c.almDur?[c.almIni||'14:00',+c.almDur]:null,lg:c.logo||'',ct:(S.catalogo||[]).length};
+    const perfil={n:c.nombre,b:(S.barberos[0]||{}).nombre==='Barbero 1'?'':(S.barberos[0]||{}).nombre,w:normTel(c.whatsapp),i:c.inicio,f:c.fin,v:+c.intervalo||30,d:c.dias||[1,2,3,4,5,6],s:S.servicios.map(s=>[s.nombre,+s.precio||0,+s.duracion||30]),tema:c.tema||'clasico',ant:+c.ant||30,mx:+c.meses||3,al:+c.almDur?[c.almIni||'14:00',+c.almDur]:null,lg:c.logo||'',ct:(S.catalogo||[]).length,pb:pubCfg().on?{h:pubCfg().h,d:pubCfg().d,t:pubCfg().t,of:pubCfg().of,od:pubCfg().od}:null};
     const ocupado=S.citas.filter(x=>x.fecha>=h0&&x.estado!=='novino').map(x=>[x.fecha,x.hora,+x.duracion||30,x.id,(x.cliente||'').split(' ')[0]]);
     const r=await fetch(API,{method:'POST',body:JSON.stringify({accion:'perfil',id:L.id,correo:c.correo||'',perfil,ocupado})});
     const j=await r.json();if(j&&j.codigo&&j.codigo!==L.codigo){L.codigo=j.codigo;saveL();if(ui.tab==='reservas')render()}
@@ -907,6 +1088,7 @@ function mostrarSolicitud(r){
 }
 function revisarHash(){
   const h=location.hash||'';
+  if(h==='#publicar'){try{history.replaceState(null,'',location.pathname+location.search)}catch(e){}setTimeout(()=>abrirPub(),400);return}
   if(h.indexOf('#r-')!==0)return;
   const r=leerSolicitud(h);
   try{location.hash=''}catch(e){}
@@ -989,6 +1171,21 @@ const A={
   'rec-volver':()=>{rec.paso=0;pintarRec()},
   'img-historia':()=>imagenRedes('historia'),
   'img-post':()=>imagenRedes('post'),
+  'horas-libres':()=>horasLibres(),
+  'pub-abrir':()=>{PUB.i=0;abrirPub()},
+  'pub-ver':el=>{PUB.i=0;abrirPub(el.dataset.v)},
+  'pub-fmt':el=>{PUB.h=el.dataset.v==='1';abrirPub(PUB.t)},
+  'pub-otra':()=>{PUB.i++;abrirPub(PUB.t)},
+  'pub-compartir':()=>compartirPub(),
+  'pub-wa':()=>{window.open('https://wa.me/?text='+encodeURIComponent(textoPub(PUB.t)),'_blank');marcarPub()},
+  'pub-hecha':()=>{marcarPub();cerrar();toast('¡Bien! 🔥 Racha de '+rachaPub()+' día'+(rachaPub()===1?'':'s'))},
+  'pub-on':()=>{const c=pubCfg();c.on=!c.on;S.config.pub=c;touch('config');guardarPubSW();if(c.on){registrarSyncPub();if('Notification' in window&&Notification.permission==='default')Notification.requestPermission().then(()=>render());toast('Listo: te aviso cada día a las '+c.h)}render()},
+  'pub-dia':el=>{const c=pubCfg(),d=+el.dataset.v;c.d=c.d.indexOf(d)>=0?c.d.filter(x=>x!==d):c.d.concat(d).sort();S.config.pub=c;touch('config');guardarPubSW();render()},
+  'pub-tipo':el=>{const c=pubCfg(),t=el.dataset.v;if(c.t.indexOf(t)>=0&&c.t.length===1){toast('Deja al menos uno');return}c.t=c.t.indexOf(t)>=0?c.t.filter(x=>x!==t):c.t.concat(t);S.config.pub=c;touch('config');render()},
+  'hl-dia':el=>{const f=el.dataset.v,i=HL.sel.indexOf(f);if(i>=0)HL.sel.splice(i,1);else HL.sel.push(f);HL.sel.sort();pintarHL()},
+  'hl-img':el=>imagenLibres(el.dataset.v),
+  'hl-wa':()=>{const t=textoLibres();if(!t){toast('Elige un día con horas libres');return}window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')},
+  'hl-copiar':()=>{const t=textoLibres();if(!t){toast('Elige un día con horas libres');return}(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('Texto copiado, pégalo en tus redes'),()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Texto copiado')}catch(e){}ta.remove()})},
   'img-compartir':()=>compartirImagen(),
   'img-bajar':()=>{bajarImagen();toast('Imagen guardada')},
   'guia-redes':()=>guiaRedes(),
@@ -1058,6 +1255,7 @@ document.addEventListener('change',e=>{
   if(el.id==='logoFile'){cargarLogo(el.files&&el.files[0]);el.value='';return}
   if(el.id==='catFile'){agregarFotoCat(el.files&&el.files[0]);el.value='';return}
   if(el.classList.contains('pick')){ui.fecha=el.value||hoy();render();return}
+  if(el.dataset.pub){const c=pubCfg(),k=el.dataset.pub;c[k]=el.value;S.config.pub=c;touch('config');guardarPubSW();toast('Guardado');if(k==='h'){L.pubAvisada='';saveL()}return}
   if(el.dataset.cfg){const k=el.dataset.cfg;let v=el.value;if(k==='intervalo'||k==='ant'||k==='meses'||k==='almDur')v=+v;if(k==='nombre'&&!v.trim())return;S.config[k]=v;touch('config');$('#hNombre').textContent=S.config.nombre;toast('Guardado');if(k==='whatsapp'||k==='almDur')render()}
   else if(el.dataset.sid){const s=serv(el.dataset.sid);if(!s)return;const k=el.dataset.k;s[k]=k==='nombre'?el.value.trim()||s.nombre:Math.max(0,+el.value||0);touch('config');toast('Guardado')}
   else if(el.dataset.bid){const b=barb(el.dataset.bid);if(b&&el.value.trim()){b.nombre=el.value.trim();touch('config');toast('Guardado')}}
@@ -1081,6 +1279,7 @@ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}ca
 setSync(S.citas.length?'guardado en este equipo':'agenda');
 initRemote();
 revisarRetornoPago();
+guardarPubSW();if(pubCfg().on)registrarSyncPub();setTimeout(revisarPub,3000);setInterval(()=>{revisarPub();if(!document.hidden&&ui.tab==='agenda'&&pubPendiente()&&!document.querySelector('.pub-aviso')&&!$('#modal').classList.contains('on'))render()},60000);
 })();
 </script>
 </body>
