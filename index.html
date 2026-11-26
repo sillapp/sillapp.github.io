@@ -192,7 +192,7 @@ h1,h2,h3,b,strong{letter-spacing:-.01em}
 .gu-dots i.on{width:26px;background:var(--acc)}
 .gu-bot .btn{padding:15px}
 </style>
-<link rel="stylesheet" href="premium.css?v=36">
+<link rel="stylesheet" href="premium.css?v=37">
 </head>
 <body>
 <header><div class="brand"><img class="logo" id="hLogo" src="icon-192.png" alt="" width="38" height="38" style="border-radius:11px"><div><h1 id="hNombre">Mi Barbería</h1><small id="hSync">Silla · agenda</small></div></div></header>
@@ -264,7 +264,7 @@ function ic(n,cls){if(n==='pole')return POLE;return'<svg class="i '+(cls||'')+'"
 const POLE='<svg width="38" height="38" viewBox="0 0 44 44" aria-hidden="true"><defs><clipPath id="pc"><rect x="15" y="8" width="14" height="28" rx="3"/></clipPath></defs><rect width="44" height="44" rx="12" fill="#1c1c1f" stroke="#303036"/><g clip-path="url(#pc)"><rect x="15" y="8" width="14" height="28" fill="#f3f3f3"/><g stroke-width="5"><path d="M8 18 36 4M8 30 36 16M8 42 36 28" stroke="#e5534b"/><path d="M8 24 36 10M8 36 36 22" stroke="#4a9eff"/></g></g><rect x="13" y="5" width="18" height="4" rx="2" fill="#e3a33b"/><rect x="13" y="35" width="18" height="4" rx="2" fill="#e3a33b"/></svg>';
 const DIAS=['Do','Lu','Ma','Mi','Ju','Vi','Sá'];
 const API='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
-const VERSION_APP='3.6';
+const VERSION_APP='3.7';
 const LKEY='silla_lic';
 
 const ESTADOS={pendiente:{t:'Pendiente',c:'p'},confirmada:{t:'Confirmada',c:'c'},atendido:{t:'Atendido',c:'a'},novino:{t:'No vino',c:'n'}};
@@ -282,6 +282,7 @@ function normalize(o){o=o||{};const d=defaults();
   servicios:Array.isArray(o.servicios)&&o.servicios.length?o.servicios:d.servicios,
   barberos:Array.isArray(o.barberos)&&o.barberos.length?o.barberos:d.barberos,
   citas:Array.isArray(o.citas)?o.citas:[],
+  fichas:o.fichas&&typeof o.fichas==='object'&&!Array.isArray(o.fichas)?o.fichas:{},
   catalogo:Array.isArray(o.catalogo)?o.catalogo.filter(f=>f&&/^data:image\//.test(f.i||'')).slice(0,12):[]}}
 function loadLocal(){try{const r=localStorage.getItem(KEY);if(r)return normalize(JSON.parse(r))}catch(e){}return defaults()}
 function saveLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
@@ -372,17 +373,26 @@ function mensaje(c){
     .replace(/\{fecha\}/g,fechaLarga(c.fecha)).replace(/\{hora\}/g,c.hora).replace(/\{servicio\}/g,s).replace(/\{barbero\}/g,(barb(c.barberoId)||{}).nombre||'');
 }
 function waLink(tel,texto){const n=normTel(tel);if(!n)return'';return'https://wa.me/'+n+(texto?'?text='+encodeURIComponent(texto):'')}
+function claveCli(tel,nombre){return normTel(tel)||('n:'+String(nombre||'').trim().toLowerCase())}
+function ficha(k){return(S.fichas||{})[k]||{}}
 function clientes(){
   const map={};
   [...S.citas].sort((a,b)=>(a.fecha+a.hora).localeCompare(b.fecha+b.hora)).forEach(c=>{
-    const k=normTel(c.telefono)||('n:'+(c.cliente||'').trim().toLowerCase());if(!c.cliente)return;
-    const o=map[k]||(map[k]={nombre:'',telefono:'',atendidos:0,novino:0,gasto:0,ultima:''});
-    o.nombre=c.cliente;if(c.telefono)o.telefono=c.telefono;
-    if(c.estado==='atendido'){o.atendidos++;o.gasto+=+c.precio||0;o.ultima=c.fecha}
+    const k=claveCli(c.telefono,c.cliente);if(!c.cliente)return;
+    const o=map[k]||(map[k]={k,nombre:'',telefono:'',atendidos:0,novino:0,gasto:0,ultima:'',primera:'',sv:{},citas:[]});
+    o.nombre=c.cliente;if(c.telefono)o.telefono=c.telefono;o.citas.push(c);
+    if(c.estado==='atendido'){o.atendidos++;o.gasto+=+c.precio||0;o.ultima=c.fecha;if(!o.primera)o.primera=c.fecha;const sn=c.servicio||(serv(c.servicioId)||{}).nombre||'';if(sn)o.sv[sn]=(o.sv[sn]||0)+1}
     if(c.estado==='novino')o.novino++;
   });
-  return Object.values(map).sort((a,b)=>(b.ultima||'').localeCompare(a.ultima||'')||a.nombre.localeCompare(b.nombre));
+  return Object.values(map).map(o=>{const f=ficha(o.k);o.cu=f.cu||'';o.notas=f.notas||'';return o}).sort((a,b)=>(b.ultima||'').localeCompare(a.ultima||'')||a.nombre.localeCompare(b.nombre));
 }
+const MESES_C=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function cuTxt(cu){if(!/^\d{2}-\d{2}$/.test(cu||''))return'';const[d,m]=cu.split('-').map(Number);return d+' de '+['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'][m-1]}
+function cuHoy(){const t=parse(hoy());return String(t.getDate()).padStart(2,'0')+'-'+String(t.getMonth()+1).padStart(2,'0')}
+function diasACumple(cu){if(!/^\d{2}-\d{2}$/.test(cu||''))return null;const[d,m]=cu.split('-').map(Number),t=parse(hoy());let c=new Date(t.getFullYear(),m-1,d);if(c<t)c=new Date(t.getFullYear()+1,m-1,d);return Math.round((c-t)/864e5)}
+function visitaN(c){const k=claveCli(c.telefono,c.cliente);return S.citas.filter(x=>x.estado==='atendido'&&claveCli(x.telefono,x.cliente)===k&&(x.fecha+x.hora)<(c.fecha+c.hora)).length+1}
+function msgCumple(n){const link=enlaceReserva();return`¡Feliz cumpleaños, ${n.split(' ')[0]}! 🎂🎉 Te saluda ${S.config.nombre||'tu barbería'}. Pasa por tu corte de cumpleaños, ¡te tenemos un regalito! 🎁`+(link?`\nReserva aquí: ${link}`:'')}
+function msgVuelve(n){const link=enlaceReserva();return`¡Hola ${n.split(' ')[0]}! Hace rato que no te vemos por ${S.config.nombre||'la barbería'} 💈 ¿Agendamos tu próximo corte?`+(link?`\nReserva aquí: ${link}`:'')}
 
 /* ---------- vistas ---------- */
 let EXTRAS={};fetch('extras.json?x='+Date.now(),{cache:'no-store'}).then(r=>r.json()).then(j=>{EXTRAS=j||{};if(ui.tab==='ajustes')render();pintarBloqueo()}).catch(()=>{});
@@ -401,6 +411,7 @@ function render(){
 }
 
 function citaCard(c){
+  const vn=visitaN(c),fc=ficha(claveCli(c.telefono,c.cliente)),esCu=fc.cu&&fc.cu===cuHoy()&&c.fecha===hoy();
   const e=ESTADOS[c.estado]||ESTADOS.pendiente,s=c.servicio||(serv(c.servicioId)||{}).nombre||'',b=S.barberos.length>1?((barb(c.barberoId)||{}).nombre||''):'';
   const wa=waLink(c.telefono,mensaje(c));
   let acts='';
@@ -410,7 +421,7 @@ function citaCard(c){
     acts+=`<button data-act="estado" data-id="${c.id}" data-v="atendido">${ic('check')}Atendido</button><button data-act="estado" data-id="${c.id}" data-v="novino">${ic('x')}No vino</button>`;
   }else acts=`<button data-act="estado" data-id="${c.id}" data-v="pendiente">${ic('undo')}Deshacer</button>`;
   return`<div class="cita ${e.c}"><div class="top" data-act="editar" data-id="${c.id}"><div class="h">${esc(c.hora)}</div>
-    <div class="info"><b>${esc(c.cliente)}${c.origen==='enlace'?'<span class="badge-enlace">ENLACE</span>':''}</b><small>${esc([s,b,clp(c.precio)].filter(Boolean).join(' · '))}</small>${c.nota?`<div class="nota">${esc(c.nota)}</div>`:''}</div>
+    <div class="info"><b>${esc(c.cliente)}${c.origen==='enlace'?'<span class="badge-enlace">ENLACE</span>':''}</b><span class="vis">${vn===1?'✨ Primera vez':vn+'ª visita'}${esCu?' · <em>🎂 ¡Cumple hoy!</em>':''}</span><small>${esc([s,b,clp(c.precio)].filter(Boolean).join(' · '))}</small>${c.nota?`<div class="nota">${esc(c.nota)}</div>`:''}</div>
     <span class="pill ${e.c}">${e.t}</span></div><div class="acts">${acts}</div></div>`;
 }
 
@@ -465,9 +476,10 @@ function pintarClientes(){
     const n=c.atendidos%10,premio=c.atendidos>0&&n===0;
     let dots='';for(let i=0;i<10;i++)dots+=`<i class="${premio||i<n?'f':''}"></i>`;
     const wa=waLink(c.telefono,'Hola '+(c.nombre.split(' ')[0])+', ');
-    return`<div class="card"><div class="cli"><div class="info"><b>${esc(c.nombre)}</b><small>${esc(c.telefono||'sin teléfono')} · ${c.atendidos} visita${c.atendidos===1?'':'s'}${c.ultima?' · última '+fechaCorta(c.ultima):''}${c.novino?' · '+c.novino+' no vino':''}</small></div></div>
+    const dc=diasACumple(c.cu);
+    return`<div class="card"><div class="cli" data-act="ficha" data-k="${esc(c.k)}"><div class="info"><b>${esc(c.nombre)}${dc===0?' 🎂':''}</b><small>${esc(c.telefono||'sin teléfono')} · ${c.atendidos} visita${c.atendidos===1?'':'s'}${c.ultima?' · última '+fechaCorta(c.ultima):''}${c.novino?' · '+c.novino+' no vino':''}</small></div></div>
       <div class="sellos">${dots}${premio?'<span class="premio">'+ic('gift')+'Próximo corte gratis</span>':''}</div>
-      <div class="acts">${wa?`<a class="wa" href="${esc(wa)}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a>`:''}<button data-act="agendar-cli" data-n="${esc(c.nombre)}" data-t="${esc(c.telefono)}">${ic('cal')}Agendar</button></div></div>`;
+      <div class="acts">${wa?`<a class="wa" href="${esc(wa)}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a>`:''}<button data-act="ficha" data-k="${esc(c.k)}">${ic('users')}Ficha</button><button data-act="agendar-cli" data-n="${esc(c.nombre)}" data-t="${esc(c.telefono)}">${ic('cal')}Agendar</button></div></div>`;
   }).join('');
 }
 
@@ -912,6 +924,50 @@ function textoRecomienda(os){const apk=!!EXTRAS.apk&&os!=='iphone',url=os==='iph
     :`📲 Cómo instalarla en Android:\n1. Abre este enlace en *Chrome*: ${url}\n2. Toca *"Instalar app"* (o ⋮ → *Instalar app*).\n3. ¡Listo, queda como app!`;
   return`💈 Te recomiendo *Silla*, la agenda para barberos: tus clientes reservan solos con tu enlace, recordatorios por WhatsApp y caja del día.\n\n✅ 30 días gratis, con tu propia cuenta.\n\n`+pasos}
 async function copiarTxt(t){try{await navigator.clipboard.writeText(t);return true}catch(e){try{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return ok}catch(x){return false}}}
+/* ---------- ficha del cliente ---------- */
+function abrirFicha(k){const c=clientes().find(x=>x.k===k);if(!c)return;const f=ficha(k),hoyF=hoy();
+  const fav=Object.entries(c.sv).sort((a,b)=>b[1]-a[1])[0],dc=diasACumple(c.cu),sinVenir=c.ultima?Math.round((parse(hoyF)-parse(c.ultima))/864e5):null;
+  const prox=c.citas.filter(x=>x.fecha>=hoyF&&(x.estado==='pendiente'||x.estado==='confirmada'))[0];
+  const ideas=[];const n=c.atendidos%10;
+  if(dc===0)ideas.push(['🎂','¡Hoy está de cumpleaños!','Mándale un saludo con un regalito.','cumple']);
+  else if(dc!=null&&dc<=7)ideas.push(['🎂','Cumple en '+dc+' día'+(dc===1?'':'s'),'Buen momento para invitarlo a un corte de cumpleaños.','cumple']);
+  if(c.atendidos>0&&n===0)ideas.push(['🎁','Le toca corte gratis','Completó 10 sellos.']);
+  else if(c.atendidos>=3&&10-n<=2)ideas.push(['🎁','Le falta'+(10-n===1?'':'n')+' '+(10-n)+' para su corte gratis','Cuéntaselo: es un motivo para volver.']);
+  if(c.atendidos>=5)ideas.push(['⭐','Cliente fiel ('+c.atendidos+' visitas)','Ofrécele un extra: lavado, cejas o perfilado de barba.']);
+  if(sinVenir!=null&&sinVenir>=35&&!prox)ideas.push(['⏳','Hace '+sinVenir+' días que no viene','Escríbele para que agende de nuevo.','vuelve']);
+  if(c.novino>=2)ideas.push(['⚠️','Faltó '+c.novino+' veces','Confírmale la hora el día antes.']);
+  const opD='<option value="">Día</option>'+Array.from({length:31},(_,i)=>`<option ${f.cu&&+f.cu.slice(0,2)===i+1?'selected':''}>${String(i+1).padStart(2,'0')}</option>`).join('');
+  const opM='<option value="">Mes</option>'+MESES_C.map((m,i)=>`<option value="${String(i+1).padStart(2,'0')}" ${f.cu&&+f.cu.slice(3)===i+1?'selected':''}>${m}</option>`).join('');
+  const hist=c.citas.slice().reverse().slice(0,12).map(x=>{const e=ESTADOS[x.estado]||ESTADOS.pendiente;return`<div class="fh"><span>${fechaCorta(x.fecha)}</span><b>${esc(x.servicio||(serv(x.servicioId)||{}).nombre||'')}</b><em class="pill ${e.c}">${e.t}</em>${x.nota?`<small>💬 ${esc(x.nota)}</small>`:''}</div>`}).join('');
+  const wa=c.telefono?waLink(c.telefono,'Hola '+c.nombre.split(' ')[0]+', '):'';
+  modal(`<div class="fi-top"><div class="fi-av">${esc((c.nombre||'?').trim().charAt(0).toUpperCase())}</div><div><h3>${esc(c.nombre)}</h3><small>${esc(c.telefono||'Sin teléfono')}${c.cu?' · 🎂 '+cuTxt(c.cu):''}</small></div></div>
+    <div class="fi-stats"><div><b>${c.atendidos}</b><span>visitas</span></div><div><b>${clp(c.gasto)}</b><span>gastado</span></div><div><b>${c.atendidos?clp(Math.round(c.gasto/c.atendidos)):'—'}</b><span>promedio</span></div></div>
+    <div class="fi-datos">${c.primera?`<div><span>Cliente desde</span><b>${fechaCorta(c.primera)}</b></div>`:''}${c.ultima?`<div><span>Última visita</span><b>${fechaCorta(c.ultima)}${sinVenir!=null?' · hace '+sinVenir+' d':''}</b></div>`:''}${fav?`<div><span>Pide siempre</span><b>${esc(fav[0])}</b></div>`:''}${prox?`<div><span>Próxima hora</span><b>${fechaCorta(prox.fecha)} ${esc(prox.hora)}</b></div>`:''}</div>
+    ${ideas.length?`<div class="fi-ideas">${ideas.map(i=>`<div><span>${i[0]}</span><p><b>${i[1]}</b><small>${i[2]}</small></p>${i[3]&&c.telefono?`<a class="wa" href="${esc(waLink(c.telefono,i[3]==='cumple'?msgCumple(c.nombre):msgVuelve(c.nombre)))}" target="_blank" rel="noopener">${ic('wa')}</a>`:''}</div>`).join('')}</div>`:''}
+    <label>🎂 Cumpleaños<div class="row"><select id="fiD">${opD}</select><select id="fiM">${opM}</select></div></label>
+    <label>📝 Notas del cliente<textarea id="fiN" rows="2" maxlength="300" placeholder="Ej: degradado bajo con tijera arriba, le gusta conversar de fútbol">${esc(f.notas||'')}</textarea></label>
+    <button class="btn pri" data-act="ficha-guardar" data-k="${esc(k)}" style="width:100%">${ic('check')}Guardar ficha</button>
+    ${hist?`<h4 class="fi-h4">Historial</h4><div class="fi-hist">${hist}</div>`:''}
+    <div class="row" style="margin-top:12px">${wa?`<a class="btn wa-btn" href="${esc(wa)}" target="_blank" rel="noopener">${ic('wa')}WhatsApp</a>`:''}<button class="btn" data-act="agendar-cli" data-n="${esc(c.nombre)}" data-t="${esc(c.telefono)}">${ic('cal')}Agendar</button></div>`)}
+function guardarFicha(k){const d=($('#fiD')||{}).value,m=($('#fiM')||{}).value,n=(($('#fiN')||{}).value||'').trim().slice(0,300);
+  if((d&&!m)||(!d&&m)){toast('Elige día y mes del cumpleaños');return}
+  S.fichas[k]=Object.assign({},S.fichas[k],{cu:d&&m?d+'-'+m:'',notas:n});touch('fichas');toast('Ficha guardada');abrirFicha(k);if(ui.tab==='clientes')pintarClientes()}
+
+/* ---------- resumen de la mañana ---------- */
+function resumenDia(forzar){if(!S.config.registrado)return;const f=hoy();if(!forzar&&L.resumenDia===f)return;
+  if(!forzar&&($('#modal').classList.contains('on')||$('#guia').classList.contains('on')))return;
+  L.resumenDia=f;saveL();
+  const ls=S.citas.filter(c=>c.fecha===f&&(c.estado==='pendiente'||c.estado==='confirmada')).sort((a,b)=>a.hora.localeCompare(b.hora));
+  const total=ls.reduce((t,c)=>t+(+c.precio||0),0),cuh=cuHoy();
+  const cumples=clientes().filter(c=>c.cu===cuh);
+  const h=new Date().getHours(),saludo=h<12?'Buenos días':h<20?'Buenas tardes':'Buenas noches',nom=((S.barberos[0]||{}).nombre||'').split(' ')[0];
+  const filas=ls.map(c=>{const vn=visitaN(c),k=claveCli(c.telefono,c.cliente),fc=ficha(k);return`<div class="rd-f" data-act="ficha" data-k="${esc(k)}"><b>${esc(c.hora)}</b><div><span>${esc(c.cliente)}${fc.cu===cuh?' 🎂':''}</span><small>${esc(c.servicio||(serv(c.servicioId)||{}).nombre||'')} · ${vn===1?'✨ primera vez':vn+'ª visita'}</small>${c.nota?`<em>💬 ${esc(c.nota)}</em>`:''}</div></div>`}).join('');
+  modal(`<div class="rd-hero"><small>${esc(fechaLarga(f).replace(/^./,x=>x.toUpperCase()))}</small><h3>${saludo}${nom?', '+esc(nom):''} ☀️</h3>
+    <div class="rd-n"><b>${ls.length}</b><span>${ls.length===1?'persona agendada':'personas agendadas'} para hoy${ls.length?' · '+clp(total)+' esperado':''}</span></div></div>
+    ${ls.length?`<div class="rd-lista">${filas}</div>`:`<p class="hint" style="text-align:center;margin:10px 0">Todavía no tienes horas hoy. Comparte tus horas libres para llenar la agenda.</p><button class="btn" data-act="horas-libres" style="width:100%;margin-bottom:8px">${ic('send')}Compartir horas libres</button>`}
+    ${cumples.length?`<div class="rd-cu"><b>🎂 Hoy están de cumpleaños</b>${cumples.map(c=>`<div><span>${esc(c.nombre)}</span>${c.telefono?`<a class="wa" href="${esc(waLink(c.telefono,msgCumple(c.nombre)))}" target="_blank" rel="noopener">${ic('wa')}Saludar</a>`:''}</div>`).join('')}</div>`:''}
+    <button class="btn pri" data-act="cerrar" style="width:100%;margin-top:10px">${ic('cal')}Ver mi agenda</button>`)}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)setTimeout(()=>resumenDia(),800)});
 /* ---------- catálogo de cortes ---------- */
 const MAX_FOTOS=12;
 function catalogoHTML(){const L2=S.catalogo||[];
@@ -975,10 +1031,11 @@ async function pedirNuevas(){
       const nuevas=[];let max=L.desde||0;
       j.reservas.forEach(x=>{max=Math.max(max,x.creada||0);const id='r_'+x.id;if(S.citas.some(c=>c.id===id))return;
         const s=S.servicios.find(v=>v.nombre===x.s);
-        const c={id,origen:'enlace',estado:'confirmada',cliente:x.c,telefono:x.t,servicioId:s?s.id:'',servicio:x.s,precio:+x.p||0,duracion:+x.m||30,barberoId:S.barberos[0].id,fecha:x.f,hora:x.h,nota:'',creada:x.creada||Date.now()};
+        const c={id,origen:'enlace',estado:'confirmada',cliente:x.c,telefono:x.t,servicioId:s?s.id:'',servicio:x.s,precio:+x.p||0,duracion:+x.m||30,barberoId:S.barberos[0].id,fecha:x.f,hora:x.h,nota:x.n||'',creada:x.creada||Date.now()};
+        if(/^\d{2}-\d{2}$/.test(x.cu||'')){const k=claveCli(x.t,x.c);S.fichas[k]=Object.assign({},S.fichas[k],{cu:x.cu})}
         S.citas.push(c);nuevas.push(c)});
       L.desde=max;saveL();
-      if(nuevas.length){touch(...new Set(nuevas.map(c=>mes(c.fecha))));render();avisarNuevas(nuevas)}
+      if(nuevas.length){touch('fichas',...new Set(nuevas.map(c=>mes(c.fecha))));render();avisarNuevas(nuevas)}
     }
   }catch(e){}
   pidiendo=false;
@@ -1005,7 +1062,7 @@ function resumenHoyHTML(){
   const h0=hoy(),ls=S.citas.filter(c=>c.fecha===h0&&(c.estado==='pendiente'||c.estado==='confirmada')).sort((a,b)=>a.hora.localeCompare(b.hora));
   const ahora=new Date(),mn=ahora.getHours()*60+ahora.getMinutes(),prox=ls.find(c=>toMin(c.hora)>=mn-10);
   if(!ls.length)return`<div class="hoyres"><div class="n">0</div><div><b>Hoy no tienes horas todavía</b><small>Comparte tu enlace para llenar la agenda.</small></div></div>`;
-  return`<div class="hoyres"><div class="n">${ls.length}</div><div><b>Hora${ls.length===1?'':'s'} agendada${ls.length===1?'':'s'} para hoy</b><small>${prox?'Próxima: '+esc(prox.hora)+' · '+esc((prox.cliente||'').split(' ')[0]):'Ya atendiste las horas de hoy'}</small></div></div>`;
+  return`<div class="hoyres" data-act="resumen-dia"><div class="n">${ls.length}</div><div><b>Hora${ls.length===1?'':'s'} agendada${ls.length===1?'':'s'} para hoy</b><small>${prox?'Próxima: '+esc(prox.hora)+' · '+esc((prox.cliente||'').split(' ')[0]):'Ya atendiste las horas de hoy'}</small></div></div>`;
 }
 function waCobro(pl){const p=plan();const n=normTel(p.cobro);if(!n)return'';
   return waLink(n,'Hola, quiero pagar mi plan de Silla ('+(pl?nombrePlan(pl.m)+': '+clp(pl.precio):clp(p.precio)+'/mes')+').\nBarbería: '+(S.config.nombre||'')+'\nNombre: '+((S.barberos[0]||{}).nombre||'')+'\nID: '+L.id)}
@@ -1247,6 +1304,9 @@ const A={
   'img-historia':()=>imagenRedes('historia'),
   'img-post':()=>imagenRedes('post'),
   'horas-libres':()=>horasLibres(),
+  ficha:el=>abrirFicha(el.dataset.k),
+  'ficha-guardar':el=>guardarFicha(el.dataset.k),
+  'resumen-dia':()=>resumenDia(true),
   'rec-compartir':el=>{const os=el.dataset.v,t=textoRecomienda(os);copiarTxt(os==='iphone'?'https://sillapp.github.io/?invita=1':linkDescarga());
     if(navigator.share)navigator.share({title:'Silla · agenda para barberos',text:t}).catch(e=>{if(!e||e.name!=='AbortError')window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')});
     else window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank')},
@@ -1350,6 +1410,7 @@ window.addEventListener('hashchange',revisarHash);
 window.aplicarTema&&aplicarTema(S.config.tema||'clasico');
 const vioGuia=(()=>{try{return localStorage.getItem('silla_guia')}catch(e){return'1'}})();
 if(!vioGuia&&!location.hash)setTimeout(abrirGuia,300);else if(!S.config.registrado&&!location.hash)setTimeout(pedirRegistro,400);
+else if(!location.hash)setTimeout(()=>resumenDia(),1200);
 if(S.config.registrado){verificar(false);if(L.catPend)setTimeout(()=>enviarCatalogo(false),5000);if(!L.respaldo||Date.now()-L.respaldo>432e5)setTimeout(()=>respaldar(false),8000)}
 window.addEventListener('online',()=>{if(L.catPend)enviarCatalogo(false);if(S.config.registrado&&(!L.respaldo||Date.now()-L.respaldo>36e5))respaldar(false)});
 setInterval(()=>{if(!document.hidden)pedirNuevas()},60000);

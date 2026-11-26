@@ -109,6 +109,7 @@ input:focus{outline:none;border-color:var(--acc)}
 .est span{display:block;padding:7px 9px;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .est.on{border-color:var(--acc);box-shadow:0 6px 18px color-mix(in srgb,var(--acc) 40%,transparent);transform:translateY(-2px)}
 .est.on span{background:var(--acc);color:var(--onacc)}
+.opc{font-weight:400;color:var(--mut,#9a948a);font-size:.85em}.opc-tx{display:block;color:var(--mut,#9a948a);font-size:12px;margin-top:4px}.cu{display:grid;grid-template-columns:1fr 1.2fr;gap:8px}#cuD,#cuM,textarea#nt{display:block;width:100%;box-sizing:border-box;margin-top:6px;background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:13px;font:inherit;font-size:16px;font-weight:500;color:var(--txt,inherit)}textarea#nt{resize:vertical}
 </style>
 <link rel="stylesheet" href="premium.css?v=30">
 </head>
@@ -209,6 +210,8 @@ function render(){
   h+=`<h2 class="${datos.n&&datos.t?'ok':''}"><span>4</span>Tus datos</h2>
     <label>Nombre<input id="nom" autocomplete="name" value="${esc(datos.n||'')}" placeholder="Tu nombre"></label>
     <label>Teléfono<input id="tel" type="tel" inputmode="tel" autocomplete="tel" value="${esc(datos.t||'')}" placeholder="9 1234 5678"></label>
+    <label>🎂 Tu cumpleaños <span class="opc">(opcional)</span><div class="cu"><select id="cuD"><option value="">Día</option>${Array.from({length:31},(_,i)=>{const v=String(i+1).padStart(2,'0');return`<option ${(datos.cu||'').slice(0,2)===v?'selected':''}>${v}</option>`}).join('')}</select><select id="cuM"><option value="">Mes</option>${['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'].map((m,i)=>{const v=String(i+1).padStart(2,'0');return`<option value="${v}" ${(datos.cu||'').slice(3)===v?'selected':''}>${m}</option>`}).join('')}</select></div><small class="opc-tx">Para saludarte en tu día 🎁</small></label>
+    <label>💬 Mensaje para tu barbero <span class="opc">(opcional)</span><textarea id="nt" rows="2" maxlength="200" placeholder="Ej: quiero un degradado bajo, voy con mi hijo…">${esc(datos.nt||'')}</textarea></label>
     <p class="nota">Tu hora queda confirmada al instante. Solo se muestran horas libres${+P.ant?', con al menos '+(+P.ant)+' minutos de anticipación':''}.</p>
     <p class="pie">Reservas con Silla</p>`;
   $('#app').innerHTML=h;barra();
@@ -227,7 +230,7 @@ function renderHecho(){
   const g=d=>d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+'T'+pad(d.getHours())+pad(d.getMinutes())+'00';
   const cal='https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent(s[0]+' en '+(P.n||'la barbería'))+'&dates='+g(ini)+'/'+g(fin)+'&ctz=America/Santiago';
   $('#app').innerHTML=`<div class="box">${OK}<h1>¡Hora reservada!</h1><p>Te esperamos en ${esc(P.n||'la barbería')}.</p>
-    <div class="det"><div><span>Servicio</span><b>${esc(s[0])}</b></div>${hecho.e?`<div><span>Estilo</span><b>${esc(hecho.e)}</b></div>`:''}<div><span>Día</span><b>${esc(fechaLarga(hecho.f))}</b></div><div><span>Hora</span><b>${esc(hecho.h)}</b></div><div><span>Valor</span><b>${clp(s[1])}</b></div></div>
+    <div class="det"><div><span>Servicio</span><b>${esc(s[0])}</b></div>${hecho.e?`<div><span>Estilo</span><b>${esc(hecho.e)}</b></div>`:''}${hecho.nt?`<div><span>Tu mensaje</span><b>${esc(hecho.nt)}</b></div>`:''}<div><span>Día</span><b>${esc(fechaLarga(hecho.f))}</b></div><div><span>Hora</span><b>${esc(hecho.h)}</b></div><div><span>Valor</span><b>${clp(s[1])}</b></div></div>
     <a class="btn" href="${esc(cal)}" target="_blank" rel="noopener">${CAL}Agregar a mi calendario</a>
     ${P.w?`<a class="btn" href="https://wa.me/${esc(P.w)}?text=${encodeURIComponent('Hola, reservé para el '+fechaLarga(hecho.f)+' a las '+hecho.h+'. ')}" target="_blank" rel="noopener">${WA}¿Necesitas cambiarla? Escríbenos</a>`:''}
     <button class="btn" id="otra">Hacer otra reserva</button></div>`;
@@ -236,8 +239,8 @@ async function confirmar(){
   if(!listo()||enviando)return;
   enviando=true;error='';barra();
   try{
-    const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim(),e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:''});
-    if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h,e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:''};try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
+    const cuOk=/^\d{2}-\d{2}$/.test(datos.cu||'')?datos.cu:'';const j=await api({accion:'reservar',b:codigo,s:sel.s,f:sel.f,h:sel.h,n:datos.n.trim(),t:datos.t.trim(),e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:'',cu:cuOk,nt:(datos.nt||'').trim().slice(0,200)});
+    if(j.ok){hecho={s:sel.s,f:sel.f,h:sel.h,e:sel.e!=null&&FOTOS[sel.e]?FOTOS[sel.e].n:'',nt:(datos.nt||'').trim()};datos.nt='';try{localStorage.setItem('silla_cliente',JSON.stringify(datos))}catch(e){}enviando=false;render();window.scrollTo(0,0);return}
     const msg={ocupada:'Esa hora se acaba de tomar. Elige otra.',anticipacion:'Esa hora ya no se puede reservar. Elige una más tarde.',limite:'Ya tienes varias horas reservadas. Escríbele a la barbería.',cerrado:'Las reservas están en pausa.',almuerzo:'Esa hora es de almuerzo. Elige otra.',datos:'Revisa tu nombre y teléfono.'}[j.error]||'No se pudo reservar. Inténtalo de nuevo.';
     error=msg;
     if(j.error==='ocupada'||j.error==='anticipacion'){const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora}sel.h=null}
@@ -259,6 +262,8 @@ document.addEventListener('click',e=>{
   render();
 });
 document.addEventListener('input',e=>{if(e.target.id==='nom')datos.n=e.target.value;if(e.target.id==='tel')datos.t=e.target.value;barra()});
+document.addEventListener('input',e=>{if(e.target.id==='nt')datos.nt=e.target.value});
+document.addEventListener('change',e=>{if(e.target.id==='cuD'||e.target.id==='cuM'){const d=($('#cuD')||{}).value,m=($('#cuM')||{}).value;datos.cu=d&&m?d+'-'+m:''}});
 setInterval(async()=>{if(hecho||!P||document.hidden)return;try{const p=await api({accion:'publico',b:codigo});if(p.ok){ocupado=p.ocupado||[];ahora=p.ahora;const foc=document.activeElement&&document.activeElement.tagName==='INPUT';if(!foc)render()}}catch(e){}},60000);
 cargar();
 })();
