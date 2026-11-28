@@ -1,5 +1,5 @@
 // Silla: guarda la app en el celular para que funcione sin internet.
-const VERSION = 'silla-v21';
+const VERSION = 'silla-v22';
 const ARCHIVOS = ['./', './index.html', './reserva.html', './r.html', './temas.js', './premium.css?v=37', './extras.json', './manifest.webmanifest',
   './icon-192.png', './icon-512.png', './icon-maskable.png', './apple-touch-icon.png'];
 

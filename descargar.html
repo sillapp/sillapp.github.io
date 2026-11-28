@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Descarga Silla · Agenda para barberos</title>
+<meta name="description" content="Descarga Silla gratis: tus clientes reservan solos con tu enlace, recordatorios por WhatsApp, ficha de clientes y caja del día. 30 días gratis.">
+<meta property="og:title" content="Descarga Silla · 30 días gratis">
+<meta property="og:description" content="La agenda para barberos donde tus clientes reservan solos, 24/7.">
+<meta property="og:image" content="https://sillapp.github.io/icon-512.png">
+<meta property="og:url" content="https://sillapp.github.io/descargar">
+<meta name="theme-color" content="#14110d">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{--gold:#e8ba62;--gold2:#f6dc9c;--ink:#f4ece0;--muted:#a89f92;--card:#1c1814;--line:#3a3127}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);line-height:1.5;min-height:100vh;
+ background:radial-gradient(90% 45% at 50% 0,#3a2c1b,transparent 70%),repeating-linear-gradient(135deg,rgba(232,186,98,.035) 0 1.5px,transparent 1.5px 14px),#0d0b09}
+body::before,body::after{content:"";position:fixed;left:0;right:0;height:8px;z-index:2;background:repeating-linear-gradient(135deg,#d23a3a 0 14px,#f4f1ec 14px 28px,#2b5fd9 28px 42px,#f4f1ec 42px 56px)}
+body::before{top:0}body::after{bottom:0}
+main{max-width:460px;margin:0 auto;padding:40px 18px 56px;text-align:center}
+.ic{width:116px;height:116px;border-radius:30px;box-shadow:0 18px 40px -14px rgba(232,186,98,.6)}
+h1{font-family:Georgia,"DejaVu Serif",serif;font-size:48px;margin:14px 0 0;background:linear-gradient(var(--gold2),#c58f35);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--muted);margin:4px 0 18px;font-size:17px}
+.badge{display:inline-block;background:rgba(232,186,98,.12);border:1.5px solid rgba(232,186,98,.5);border-radius:99px;padding:6px 14px;font-weight:700;font-size:14px;color:var(--gold2);margin-bottom:18px}
+.card{background:var(--card);border:1.5px solid var(--line);border-radius:22px;padding:18px;margin:14px 0;text-align:left;box-shadow:0 16px 30px -22px #000}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:17px;border-radius:16px;border:0;font-size:18px;font-weight:800;color:#1a1408;text-decoration:none;cursor:pointer;background:linear-gradient(135deg,var(--gold2),#c58f35);box-shadow:0 12px 24px -12px var(--gold)}
+.btn.sec{background:transparent;color:var(--ink);border:1.5px solid var(--line);box-shadow:none;font-size:16px;margin-top:10px}
+ol{margin:12px 0 0;padding-left:22px}li{margin:7px 0}b{color:var(--gold2)}
+.muted{color:var(--muted);font-size:14px}
+.tabs{display:flex;gap:8px;justify-content:center;margin:8px 0 4px}
+.tabs button{border:1.5px solid var(--line);background:transparent;border-radius:99px;padding:8px 16px;font-weight:700;color:var(--muted);cursor:pointer;font-size:15px}
+.tabs button.on{color:#1a1408;border-color:transparent;background:linear-gradient(135deg,var(--gold2),#c58f35)}
+.feat{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.feat div{background:#13110e;border:1px solid var(--line);border-radius:14px;padding:10px;font-size:14px;font-weight:600}
+#qr{display:inline-block;background:#fff;padding:12px;border-radius:16px;margin:10px 0}
+.hide{display:none}
+a{color:var(--gold2)}
+</style>
+</head>
+<body>
+<main>
+<img class="ic" src="icon-512.png" alt="Silla">
+<h1>Silla</h1>
+<p class="sub">La agenda para barberos donde tus clientes reservan solos</p>
+<span class="badge">✂️ 30 días gratis · sin tarjeta</span>
+
+<div id="inapp" class="card hide" style="border-color:#e8ba62;text-align:center"><b>📲 Ábrelo en tu navegador</b><p class="muted" style="margin:6px 0 0">Estás dentro de TikTok o Instagram. Toca los <b>3 puntos ⋯</b> arriba a la derecha y elige <b>"Abrir en el navegador"</b> (Chrome o Safari) para instalar Silla.</p><button class="btn sec" onclick="copiar()">Copiar enlace</button></div>
+<div class="tabs"><button id="tA" onclick="ver('a')">🤖 Android</button><button id="tI" onclick="ver('i')">🍎 iPhone</button></div>
+
+<div id="vA" class="card">
+ <button class="btn" id="bInst" onclick="instalar()">⬇️ Instalar Silla gratis</button>
+ <ol>
+  <li>Toca <b>Instalar Silla gratis</b> y luego <b>Instalar</b>.</li>
+  <li>Si no aparece, toca los <b>3 puntos ⋮</b> de Chrome → <b>"Instalar app"</b> o <b>"Agregar a pantalla principal"</b>.</li>
+  <li>¡Listo! Silla queda en tu inicio como una app 💈</li>
+ </ol>
+ <a class="btn sec" href="./">Abrir Silla ahora</a>
+</div>
+
+<div id="vI" class="card hide">
+ <ol>
+  <li>Abre este enlace en <b>Safari</b> (no dentro de Instagram ni TikTok).</li>
+  <li>Toca <b>Compartir</b> <span style="font-size:18px">⬆️</span> abajo.</li>
+  <li>Elige <b>"Agregar a inicio"</b> y toca <b>Agregar</b>. ¡Queda como app! 💈</li>
+ </ol>
+ <a class="btn" href="./" style="margin-top:14px">Abrir Silla</a>
+ <button class="btn sec" onclick="copiar()">Copiar enlace para Safari</button>
+</div>
+
+<div id="vD" class="card hide" style="text-align:center">
+ <b>Escanéalo con tu celular</b>
+ <div><div id="qr"></div></div>
+ <p class="muted">O abre <b>sillapp.github.io/descargar</b> en tu teléfono.</p>
+</div>
+
+<div class="card">
+ <b>Lo que hace Silla por ti</b>
+ <div class="feat"><div>📅 Reservas solas 24/7</div><div>💬 Recordatorios por WhatsApp</div><div>🎂 Ficha y cumpleaños</div><div>💰 Caja del día y del mes</div><div>📣 Horas libres para redes</div><div>☁️ Respaldo en la nube</div></div>
+</div>
+<p class="muted">Cada barbero tiene su propia cuenta, su enlace de reservas y sus 30 días gratis.</p>
+</main>
+<script>
+const URL_D='https://sillapp.github.io/descargar';
+const ua=navigator.userAgent,ios=/iPhone|iPad|iPod/.test(ua)||(/Macintosh/.test(ua)&&'ontouchend' in document),and=/Android/.test(ua),movil=ios||and;
+function ver(k){document.getElementById('vA').classList.toggle('hide',k!=='a');document.getElementById('vI').classList.toggle('hide',k!=='i');document.getElementById('tA').classList.toggle('on',k==='a');document.getElementById('tI').classList.toggle('on',k==='i')}
+function copiar(){navigator.clipboard.writeText(URL_D).then(()=>aviso('Enlace copiado: pégalo en tu navegador')).catch(()=>{})}
+function aviso(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#e8ba62;color:#1a1408;padding:12px 18px;border-radius:14px;font-weight:700;z-index:9';document.body.appendChild(d);setTimeout(()=>d.remove(),2400)}
+ver(ios?'i':'a');
+// Contador de visitas para el panel: 1 por teléfono al día, con su origen (tiktok, instagram, etc.)
+const API_V='https://script.google.com/macros/s/AKfycbzVAXe-wM8xVHy9DOyh-EbtR9cfySFpLNvnYqR4-ZqMQR1GYJzkrj-Sovw02bKuq2AH/exec';
+function origen(){const q=new URLSearchParams(location.search),f=(q.get('f')||q.get('utm_source')||'').toLowerCase();if(f)return f.slice(0,20);
+ if(/musical_ly|Bytedance|TikTok/i.test(ua))return 'tiktok';if(/Instagram/i.test(ua))return 'instagram';if(/FBAN|FBAV/i.test(ua))return 'facebook';
+ const r=document.referrer;if(!r)return 'directo';try{const h=new URL(r).hostname.replace(/^www\.|^m\./,'');if(h===location.hostname)return 'directo';
+ for(const k of ['tiktok','instagram','facebook','whatsapp','google','youtube'])if(h.indexOf(k)>=0)return k;return h.slice(0,20)}catch(e){return 'directo'}}
+function contar(p){try{const dia=new Date().toISOString().slice(0,10),k='sv_'+p;if(localStorage.getItem(k)===dia)return;localStorage.setItem(k,dia);
+ fetch(API_V+'?accion=visita&p='+encodeURIComponent(p)+'&f='+encodeURIComponent(origen())+'&t='+Date.now(),{mode:'no-cors',keepalive:true}).catch(()=>{})}catch(e){}}
+contar('silla-descargar');
+if(/musical_ly|Bytedance|TikTok|Instagram|FBAN|FBAV/i.test(ua))document.getElementById('inapp').classList.remove('hide');
+let dp=null;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();dp=e});
+window.addEventListener('appinstalled',()=>{contar('silla-descargar·instalada');aviso('¡Silla quedó instalada! Búscala en tu inicio 💈')});
+function instalar(){contar('silla-descargar·instalar');if(dp){dp.prompt();dp.userChoice.finally(()=>dp=null);return}
+ if(window.matchMedia('(display-mode: standalone)').matches){location.href='./';return}
+ aviso('Toca ⋮ arriba → "Instalar app"');}
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if(!movil){document.getElementById('vD').classList.remove('hide');const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';s.onload=()=>new QRCode(document.getElementById('qr'),{text:URL_D,width:180,height:180});document.head.appendChild(s)}
+</script>
+</body>
+</html>
